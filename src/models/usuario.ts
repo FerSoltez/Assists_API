@@ -7,6 +7,7 @@ interface UsuarioAttributes {
   email: string;
   contrasena: string;
   id_tipo: string;
+  intentos: number;
 }
 
 class UsuarioModel extends Model<UsuarioAttributes> implements UsuarioAttributes {
@@ -15,6 +16,7 @@ class UsuarioModel extends Model<UsuarioAttributes> implements UsuarioAttributes
   public email!: string;
   public contrasena!: string;
   public id_tipo!: string;
+  public intentos!: number;
 }
 
 UsuarioModel.init(
@@ -39,7 +41,12 @@ UsuarioModel.init(
     id_tipo: {
       type: DataTypes.STRING,
       allowNull: false,
-    }
+    },
+    intentos: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
   },
   {
     sequelize,
