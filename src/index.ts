@@ -2,6 +2,7 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import usuarioRoutes from './routes/usuarioRoutes';
+import clasesRoutes from './routes/claseRoutes';
 
 
 dotenv.config();
@@ -13,6 +14,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api", usuarioRoutes);
+app.use("/api", clasesRoutes);
 
 
 // Ruta de prueba
