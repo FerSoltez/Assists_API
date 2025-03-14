@@ -29,6 +29,9 @@ const usuarioController = {
     loginUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { email, password } = req.body;
+            if (!email || !password) {
+                return res.status(400).json({ message: "Email y contraseña son requeridos" });
+            }
             const usuario = yield usuario_1.default.findOne({ where: { email } });
             if (!usuario) {
                 return res.status(404).json({ message: "Usuario no encontrado" });
