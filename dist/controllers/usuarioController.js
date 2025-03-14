@@ -28,8 +28,8 @@ const usuarioController = {
     }),
     loginUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const { email, password } = req.body;
-            if (!email || !password) {
+            const { email, contrasena } = req.body;
+            if (!email || !contrasena) {
                 return res.status(400).json({ message: "Email y contraseña son requeridos" });
             }
             const usuario = yield usuario_1.default.findOne({ where: { email } });
@@ -39,7 +39,7 @@ const usuarioController = {
             if (usuario.intentos === 0) {
                 return res.status(403).json({ message: "Cuenta bloqueada. Contacte al administrador." });
             }
-            const isPasswordValid = yield bcryptjs_1.default.compare(password, usuario.contrasena);
+            const isPasswordValid = yield bcryptjs_1.default.compare(contrasena, usuario.contrasena);
             if (!isPasswordValid) {
                 yield usuario_1.default.update({ intentos: usuario.intentos - 1 }, { where: { id_usuario: usuario.id_usuario } });
                 return res.status(401).json({ message: "Contraseña incorrecta. Intentos restantes: " + (usuario.intentos - 1) });

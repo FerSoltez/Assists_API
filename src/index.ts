@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import usuarioRoutes from './routes/usuarioRoutes';
 import clasesRoutes from './routes/claseRoutes';
-
+import asistenciaRoutes from "./routes/asistenciaRoutes";
 
 dotenv.config();
 const app: Application = express();
@@ -15,6 +15,7 @@ app.use(express.json());
 // Routes
 app.use("/api", usuarioRoutes);
 app.use("/api", clasesRoutes);
+app.use("/api", asistenciaRoutes);
 
 
 // Ruta de prueba
