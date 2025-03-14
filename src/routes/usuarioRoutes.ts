@@ -9,5 +9,6 @@ router.get("/usuarios/:id", usuarioController.getUsuario);
 router.put("/usuarios/:id", usuarioController.updateUsuario);
 router.patch("/usuarios/:id", usuarioController.partialUpdateUsuario as any);
 router.delete("/usuarios/:id", usuarioController.deleteUsuario);
+router.post("/usuarios/login", usuarioController.loginUsuario as any);
 
 export default router;
