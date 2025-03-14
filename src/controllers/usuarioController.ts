@@ -17,9 +17,9 @@ const usuarioController = {
 
   loginUsuario: async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body;
+      const { email, contrasena } = req.body;
 
-      if (!email || !password) {
+      if (!email || !contrasena) {
         return res.status(400).json({ message: "Email y contraseña son requeridos" });
       }
 
@@ -33,7 +33,7 @@ const usuarioController = {
         return res.status(403).json({ message: "Cuenta bloqueada. Contacte al administrador." });
       }
 
-      const isPasswordValid = await bcrypt.compare(password, usuario.contrasena);
+      const isPasswordValid = await bcrypt.compare(contrasena, usuario.contrasena);
       if (!isPasswordValid) {
         await Usuarios.update({ intentos: usuario.intentos - 1 }, { where: { id_usuario: usuario.id_usuario } });
         return res.status(401).json({ message: "Contraseña incorrecta. Intentos restantes: " + (usuario.intentos - 1) });
