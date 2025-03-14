@@ -29,7 +29,6 @@ UsuarioModel.init({
     intentos: {
         type: sequelize_1.DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 0,
     },
 }, {
     sequelize: database_1.sequelize,

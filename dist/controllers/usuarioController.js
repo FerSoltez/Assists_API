@@ -18,8 +18,8 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const usuarioController = {
     createUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const hashedPassword = yield bcryptjs_1.default.hash(req.body.password, 10);
-            const newUsuario = yield usuario_1.default.create(Object.assign(Object.assign({}, req.body), { password: hashedPassword, intentos: 3 }));
+            const hashedPassword = yield bcryptjs_1.default.hash(req.body.contrasena, 10);
+            const newUsuario = yield usuario_1.default.create(Object.assign(Object.assign({}, req.body), { contrasena: hashedPassword, intentos: 3 }));
             res.status(201).json(newUsuario);
         }
         catch (error) {

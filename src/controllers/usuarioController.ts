@@ -7,8 +7,8 @@ import jwt from "jsonwebtoken";
 const usuarioController = {
   createUsuario: async (req: Request, res: Response) => {
     try {
-      const hashedPassword = await bcrypt.hash(req.body.password, 10);
-      const newUsuario = await Usuarios.create({ ...req.body, password: hashedPassword, intentos: 3 });
+      const hashedPassword = await bcrypt.hash(req.body.contrasena, 10);
+      const newUsuario = await Usuarios.create({ ...req.body, contrasena: hashedPassword, intentos: 3 });
       res.status(201).json(newUsuario);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });

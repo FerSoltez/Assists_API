@@ -45,7 +45,6 @@ UsuarioModel.init(
     intentos: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 0,
       },
   },
   {
