@@ -1,13 +1,14 @@
 import { Router } from "express";
 import claseController from "../controllers/claseController";
+import authMiddleware from "../middleware/authMiddleware";
 
 const router = Router();
 
-router.post("/clases", claseController.createClase);
-router.get("/clases", claseController.getAllClases);
-router.get("/clases/:id", claseController.getClase);
-router.put("/clases/:id", claseController.updateClase);
-router.delete("/clases/:id", claseController.deleteClase);
-router.patch("/clases/:id", claseController.partialUpdateClase as any);
+router.post("/clases", authMiddleware, claseController.createClase);
+router.get("/clases", authMiddleware, claseController.getAllClases);
+router.get("/clases/:id", authMiddleware, claseController.getClase);
+router.put("/clases/:id", authMiddleware, claseController.updateClase);
+router.delete("/clases/:id", authMiddleware, claseController.deleteClase);
+router.patch("/clases/:id", authMiddleware, claseController.partialUpdateClase as any);
 
 export default router;
