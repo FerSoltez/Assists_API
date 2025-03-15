@@ -2,7 +2,9 @@ import { Request, Response } from "express";
 import Usuarios from "../models/usuario";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
+import Asistencia from "../models/asistencia";
+import Clase from "../models/clase";
+import Usuario from "../models/usuario";
 
 const usuarioController = {
   createUsuario: async (req: Request, res: Response) => {
@@ -115,6 +117,18 @@ const usuarioController = {
       await Usuarios.update(req.body, { where: { id_usuario: req.params.id } });
       const updatedUsuario = await Usuarios.findByPk(req.params.id);
       res.status(200).json(updatedUsuario);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  },
+
+  clearDatabase: async (req: Request, res: Response) => {
+    try {
+      await Asistencia.destroy({ where: {}, truncate: true });
+      await Clase.destroy({ where: {}, truncate: true });
+      await Usuario.destroy({ where: {}, truncate: true });
+
+      res.status(200).json({ message: "Datos borrados exitosamente de todas las tablas excepto TIPO_USUARIO" });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }

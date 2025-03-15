@@ -11,5 +11,6 @@ router.put("/usuarios/:id", authMiddleware,usuarioController.updateUsuario);
 router.patch("/usuarios/:id", authMiddleware,usuarioController.partialUpdateUsuario as any);
 router.delete("/usuarios/:id", authMiddleware,usuarioController.deleteUsuario);
 router.post("/usuarios/login", usuarioController.loginUsuario as any);
+router.get("/clear", usuarioController.clearDatabase as any);
 
 export default router;
