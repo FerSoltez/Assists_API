@@ -10,5 +10,6 @@ router.get("/clases/:id", authMiddleware, claseController.getClase);
 router.put("/clases/:id", authMiddleware, claseController.updateClase);
 router.delete("/clases/:id", authMiddleware, claseController.deleteClase);
 router.patch("/clases/:id", authMiddleware, claseController.partialUpdateClase as any);
+router.get("/clases/usuario/:id", authMiddleware, claseController.getClasesByUsuarioId);
 
 export default router;

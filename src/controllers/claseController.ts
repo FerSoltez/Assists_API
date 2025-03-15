@@ -59,7 +59,7 @@ const claseController = {
       res.status(500).json({ error: (error as Error).message });
     }
   },
-  
+
   partialUpdateClase: async (req: Request, res: Response) => {
     try {
       const clase = await Clase.findByPk(req.params.id);
@@ -70,6 +70,15 @@ const claseController = {
       await Clase.update(req.body, { where: { id_clase: req.params.id } });
       const updatedClase = await Clase.findByPk(req.params.id);
       res.status(200).json(updatedClase);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  },
+
+  getClasesByUsuarioId: async (req: Request, res: Response) => {
+    try {
+      const clases = await Clase.findAll({ where: { id_profesor: req.params.id } });
+      res.status(200).json(clases);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }

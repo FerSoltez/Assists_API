@@ -74,6 +74,15 @@ const asistenciaController = {
       res.status(500).json({ error: (error as Error).message });
     }
   },
+
+  getAsistenciasByUsuarioId: async (req: Request, res: Response) => {
+    try {
+      const asistencias = await Asistencia.findAll({ where: { id_estudiante: req.params.id } });
+      res.status(200).json(asistencias);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  },
 };
 
 export default asistenciaController;
