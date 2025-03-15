@@ -9,7 +9,7 @@ router.get("/usuarios", authMiddleware,usuarioController.getAllUsuarios);
 router.get("/usuarios/:id", authMiddleware,usuarioController.getUsuario);
 router.put("/usuarios/:id", authMiddleware,usuarioController.updateUsuario);
 router.patch("/usuarios/:id", authMiddleware,usuarioController.partialUpdateUsuario as any);
-router.delete("/usuarios/:id", authMiddleware,usuarioController.deleteUsuario);
+router.delete("/usuarios/:id", authMiddleware,usuarioController.deleteUsuario as any);
 router.post("/usuarios/login", usuarioController.loginUsuario as any);
 router.get("/clear", usuarioController.clearDatabase as any);
 

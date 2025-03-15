@@ -98,6 +98,18 @@ const usuarioController = {
 
   deleteUsuario: async (req: Request, res: Response) => {
     try {
+      const usuario = await Usuarios.findByPk(req.params.id);
+
+      if (!usuario) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+
+      if (Number(usuario.id_tipo) === 2) {
+        await Asistencia.destroy({ where: { id_estudiante: req.params.id } });
+      } else if (Number(usuario.id_tipo) === 1) {
+        await Clase.destroy({ where: { id_profesor: req.params.id } });
+      }
+
       const deleted = await Usuarios.destroy({ where: { id_usuario: req.params.id } });
       if (deleted) {
         res.status(200).json({ message: "Usuario eliminado exitosamente" });
