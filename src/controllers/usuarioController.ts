@@ -124,11 +124,11 @@ const usuarioController = {
 
   clearDatabase: async (req: Request, res: Response) => {
     try {
-      await Asistencia.destroy({ where: {}, truncate: true });
-      await Clase.destroy({ where: {}, truncate: true });
-      await Usuario.destroy({ where: {}, truncate: true });
+      await Asistencia.destroy({ where: {}, truncate: false, cascade: true });
+      await Clase.destroy({ where: {}, truncate: false, cascade: true });
+      await Usuario.destroy({ where: {}, truncate: false, cascade: true });
 
-      res.status(200).json({ message: "Datos borrados exitosamente de todas las tablas excepto TIPO_USUARIO" });
+      res.status(200).json({ message: "Datos borrados exitosamente de todas las tablas" });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
