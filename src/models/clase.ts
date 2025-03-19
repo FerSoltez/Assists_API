@@ -1,19 +1,21 @@
-import { DataTypes, Model } from "sequelize";
-import { sequelize } from '../config/database';
-import UsuarioModel from "./usuario";
+import { DataTypes, Model, Optional } from "sequelize";
+import { sequelize } from "../config/database";
 
 interface ClaseAttributes {
   id_clase: number;
   nombre_clase: string;
-  horario: string;
+  horario: Date;
   duracion: number;
   id_profesor: number;
 }
 
-class ClaseModel extends Model<ClaseAttributes> implements ClaseAttributes {
+// Define una interfaz para los atributos opcionales al crear una nueva instancia
+interface ClaseCreationAttributes extends Optional<ClaseAttributes, "id_clase"> {}
+
+class ClaseModel extends Model<ClaseAttributes, ClaseCreationAttributes> implements ClaseAttributes {
   public id_clase!: number;
   public nombre_clase!: string;
-  public horario!: string;
+  public horario!: Date;
   public duracion!: number;
   public id_profesor!: number;
 }
@@ -30,7 +32,7 @@ ClaseModel.init(
       allowNull: false,
     },
     horario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DATE,
       allowNull: false,
     },
     duracion: {
@@ -40,11 +42,6 @@ ClaseModel.init(
     id_profesor: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: UsuarioModel,
-        key: "id_usuario",
-      },
-      onDelete: "CASCADE",
     },
   },
   {

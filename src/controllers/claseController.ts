@@ -1,11 +1,32 @@
 import { Request, Response } from "express";
+import { sequelize } from "../config/database"; // Asegúrate de importar tu instancia de Sequelize
 import Clase from "../models/clase";
+import ClaseDias from "../models/claseDias";
 
 const claseController = {
   createClase: async (req: Request, res: Response) => {
     try {
-      const newClase = await Clase.create(req.body);
-      res.status(201).json(newClase);
+      const { nombre_clase, horario, duracion, id_profesor, dias } = req.body;
+  
+      // Crear la clase
+      const newClase = await Clase.create({ nombre_clase, horario, duracion, id_profesor });
+  
+      // Crear los registros en CLASE_DIAS si se proporcionan días
+      if (dias && Array.isArray(dias)) {
+        const claseDiasData = dias.map((dia: string) => ({
+          id_clase: newClase.id_clase,
+          dia_semana: dia,
+        }));
+  
+        await ClaseDias.bulkCreate(claseDiasData);
+      }
+  
+      // Obtener la clase con los días asociados
+      const claseConDias = await Clase.findByPk(newClase.id_clase, {
+        include: [{ model: ClaseDias }],
+      });
+  
+      res.status(201).json(claseConDias);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
