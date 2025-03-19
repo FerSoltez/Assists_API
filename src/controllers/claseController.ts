@@ -70,9 +70,16 @@ const claseController = {
 
   deleteClase: async (req: Request, res: Response) => {
     try {
-      const deleted = await Clase.destroy({ where: { id_clase: req.params.id } });
+      const { id } = req.params;
+  
+      // Eliminar los días asociados en CLASE_DIAS
+      await ClaseDias.destroy({ where: { id_clase: id } });
+  
+      // Eliminar la clase en CLASE
+      const deleted = await Clase.destroy({ where: { id_clase: id } });
+  
       if (deleted) {
-        res.status(200).json({ message: "Clase eliminada exitosamente" });
+        res.status(200).json({ message: "Clase y sus días asociados eliminados exitosamente" });
       } else {
         res.status(404).json({ message: "Clase no encontrada" });
       }

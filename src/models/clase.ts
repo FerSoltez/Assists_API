@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
+import ClaseDias from "./claseDias";
 
 interface ClaseAttributes {
   id_clase: number;
@@ -9,7 +10,6 @@ interface ClaseAttributes {
   id_profesor: number;
 }
 
-// Define una interfaz para los atributos opcionales al crear una nueva instancia
 interface ClaseCreationAttributes extends Optional<ClaseAttributes, "id_clase"> {}
 
 class ClaseModel extends Model<ClaseAttributes, ClaseCreationAttributes> implements ClaseAttributes {
@@ -20,6 +20,7 @@ class ClaseModel extends Model<ClaseAttributes, ClaseCreationAttributes> impleme
   public id_profesor!: number;
 }
 
+// Inicializar el modelo
 ClaseModel.init(
   {
     id_clase: {
@@ -51,5 +52,9 @@ ClaseModel.init(
     timestamps: false,
   }
 );
+
+// Configurar la asociación
+ClaseModel.hasMany(ClaseDias, { foreignKey: "id_clase", onDelete: "CASCADE" });
+ClaseDias.belongsTo(ClaseModel, { foreignKey: "id_clase" });
 
 export default ClaseModel;

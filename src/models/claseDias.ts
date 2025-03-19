@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
-import ClaseModel from "./clase";
+import Clase from "./clase";
 
 interface ClaseDiasAttributes {
   id_clase_dia: number;
@@ -8,7 +8,6 @@ interface ClaseDiasAttributes {
   dia_semana: string;
 }
 
-// Define una interfaz para los atributos opcionales al crear una nueva instancia
 interface ClaseDiasCreationAttributes extends Optional<ClaseDiasAttributes, "id_clase_dia"> {}
 
 class ClaseDiasModel extends Model<ClaseDiasAttributes, ClaseDiasCreationAttributes> implements ClaseDiasAttributes {
@@ -28,7 +27,7 @@ ClaseDiasModel.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: ClaseModel,
+        model: Clase,
         key: "id_clase",
       },
       onDelete: "CASCADE",
