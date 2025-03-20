@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import Asistencia from "../models/asistencia";
 import Clase from "../models/clase";
 import Usuario from "../models/usuario";
+import ClaseDias from "../models/claseDias"; // Ensure this path is correct
 
 const usuarioController = {
   createUsuario: async (req: Request, res: Response) => {
@@ -72,11 +73,31 @@ const usuarioController = {
   getUsuario: async (req: Request, res: Response) => {
     try {
       const usuario = await Usuarios.findByPk(req.params.id);
-      if (usuario) {
-        res.status(200).json(usuario);
-      } else {
-        res.status(404).json({ message: "Usuario no encontrado" });
+  
+      if (!usuario) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
       }
+  
+      let additionalData = {};
+  
+      if (Number(usuario.id_tipo) === 1) {
+        // Si el usuario es un profesor (id_tipo = 1), obtener sus clases con los días
+        const clases = await Clase.findAll({
+          include: [{ model: ClaseDias }], // Ensure ClaseDias is correctly defined in the imported module
+        });
+        additionalData = { clases };
+      } else if (Number(usuario.id_tipo) === 2) {
+        // Si el usuario es un estudiante (id_tipo = 2), obtener sus asistencias
+        const asistencias = await Asistencia.findAll({
+          where: { id_estudiante: usuario.id_usuario },
+        });
+        additionalData = { asistencias };
+      }
+  
+      res.status(200).json({
+        usuario,
+        ...additionalData,
+      });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }

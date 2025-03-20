@@ -7,7 +7,7 @@ const router = Router();
 
 router.post("/usuarios", usuarioController.createUsuario);
 router.get("/usuarios", authMiddleware,usuarioController.getAllUsuarios);
-router.get("/usuarios/:id", authMiddleware, verifyOwnership,usuarioController.getUsuario);
+router.get("/usuarios/:id", authMiddleware, verifyOwnership,usuarioController.getUsuario as any);
 router.put("/usuarios/:id", authMiddleware, verifyOwnership, usuarioController.updateUsuario);
 router.patch("/usuarios/:id", authMiddleware, verifyOwnership, usuarioController.partialUpdateUsuario as any);
 router.delete("/usuarios/:id", authMiddleware, verifyOwnership, usuarioController.deleteUsuario as any);

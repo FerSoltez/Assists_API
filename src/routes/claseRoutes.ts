@@ -7,7 +7,7 @@ const router = Router();
 
 router.post("/clases", authMiddleware, claseController.createClase);
 router.get("/clases", authMiddleware, verifyOwnership, claseController.getAllClases);
-router.get("/clases/:id", authMiddleware, verifyOwnership, claseController.getClase);
+router.get("/clases/:id", authMiddleware, claseController.getClase);
 router.put("/clases/:id", authMiddleware, verifyOwnership, claseController.updateClase);
 router.delete("/clases/:id", authMiddleware, verifyOwnership, claseController.deleteClase);
 router.patch("/clases/:id", authMiddleware, verifyOwnership, claseController.partialUpdateClase as any);

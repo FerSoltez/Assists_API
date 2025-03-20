@@ -15,6 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const usuario_1 = __importDefault(require("../models/usuario"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const asistencia_1 = __importDefault(require("../models/asistencia"));
+const clase_1 = __importDefault(require("../models/clase"));
+const usuario_2 = __importDefault(require("../models/usuario"));
+const claseDias_1 = __importDefault(require("../models/claseDias")); // Ensure this path is correct
 const usuarioController = {
     createUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -73,12 +77,25 @@ const usuarioController = {
     getUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const usuario = yield usuario_1.default.findByPk(req.params.id);
-            if (usuario) {
-                res.status(200).json(usuario);
+            if (!usuario) {
+                return res.status(404).json({ message: "Usuario no encontrado" });
             }
-            else {
-                res.status(404).json({ message: "Usuario no encontrado" });
+            let additionalData = {};
+            if (Number(usuario.id_tipo) === 1) {
+                // Si el usuario es un profesor (id_tipo = 1), obtener sus clases con los días
+                const clases = yield clase_1.default.findAll({
+                    include: [{ model: claseDias_1.default }], // Ensure ClaseDias is correctly defined in the imported module
+                });
+                additionalData = { clases };
             }
+            else if (Number(usuario.id_tipo) === 2) {
+                // Si el usuario es un estudiante (id_tipo = 2), obtener sus asistencias
+                const asistencias = yield asistencia_1.default.findAll({
+                    where: { id_estudiante: usuario.id_usuario },
+                });
+                additionalData = { asistencias };
+            }
+            res.status(200).json(Object.assign({ usuario }, additionalData));
         }
         catch (error) {
             res.status(500).json({ error: error.message });
@@ -101,6 +118,16 @@ const usuarioController = {
     }),
     deleteUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
+            const usuario = yield usuario_1.default.findByPk(req.params.id);
+            if (!usuario) {
+                return res.status(404).json({ message: "Usuario no encontrado" });
+            }
+            if (Number(usuario.id_tipo) === 2) {
+                yield asistencia_1.default.destroy({ where: { id_estudiante: req.params.id } });
+            }
+            else if (Number(usuario.id_tipo) === 1) {
+                yield clase_1.default.destroy({ where: { id_profesor: req.params.id } });
+            }
             const deleted = yield usuario_1.default.destroy({ where: { id_usuario: req.params.id } });
             if (deleted) {
                 res.status(200).json({ message: "Usuario eliminado exitosamente" });
@@ -122,6 +149,17 @@ const usuarioController = {
             yield usuario_1.default.update(req.body, { where: { id_usuario: req.params.id } });
             const updatedUsuario = yield usuario_1.default.findByPk(req.params.id);
             res.status(200).json(updatedUsuario);
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }),
+    clearDatabase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            yield asistencia_1.default.destroy({ where: {}, truncate: false, cascade: true });
+            yield clase_1.default.destroy({ where: {}, truncate: false, cascade: true });
+            yield usuario_2.default.destroy({ where: {}, truncate: false, cascade: true });
+            res.status(200).json({ message: "Datos borrados exitosamente de todas las tablas" });
         }
         catch (error) {
             res.status(500).json({ error: error.message });

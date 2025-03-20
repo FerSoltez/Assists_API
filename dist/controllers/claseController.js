@@ -13,11 +13,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const clase_1 = __importDefault(require("../models/clase"));
+const claseDias_1 = __importDefault(require("../models/claseDias"));
 const claseController = {
     createClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const newClase = yield clase_1.default.create(req.body);
-            res.status(201).json(newClase);
+            const { nombre_clase, horario, duracion, id_profesor, dias } = req.body;
+            // Crear la clase
+            const newClase = yield clase_1.default.create({ nombre_clase, horario, duracion, id_profesor });
+            // Crear los registros en CLASE_DIAS si se proporcionan días
+            if (dias && Array.isArray(dias)) {
+                const claseDiasData = dias.map((dia) => ({
+                    id_clase: newClase.id_clase,
+                    dia_semana: dia,
+                }));
+                yield claseDias_1.default.bulkCreate(claseDiasData);
+            }
+            // Obtener la clase con los días asociados
+            const claseConDias = yield clase_1.default.findByPk(newClase.id_clase, {
+                include: [{ model: claseDias_1.default }],
+            });
+            res.status(201).json(claseConDias);
         }
         catch (error) {
             res.status(500).json({ error: error.message });
@@ -63,9 +78,13 @@ const claseController = {
     }),
     deleteClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const deleted = yield clase_1.default.destroy({ where: { id_clase: req.params.id } });
+            const { id } = req.params;
+            // Eliminar los días asociados en CLASE_DIAS
+            yield claseDias_1.default.destroy({ where: { id_clase: id } });
+            // Eliminar la clase en CLASE
+            const deleted = yield clase_1.default.destroy({ where: { id_clase: id } });
             if (deleted) {
-                res.status(200).json({ message: "Clase eliminada exitosamente" });
+                res.status(200).json({ message: "Clase y sus días asociados eliminados exitosamente" });
             }
             else {
                 res.status(404).json({ message: "Clase no encontrada" });
@@ -84,6 +103,15 @@ const claseController = {
             yield clase_1.default.update(req.body, { where: { id_clase: req.params.id } });
             const updatedClase = yield clase_1.default.findByPk(req.params.id);
             res.status(200).json(updatedClase);
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }),
+    getClasesByUsuarioId: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const clases = yield clase_1.default.findAll({ where: { id_profesor: req.params.id } });
+            res.status(200).json(clases);
         }
         catch (error) {
             res.status(500).json({ error: error.message });
