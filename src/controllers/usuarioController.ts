@@ -5,7 +5,8 @@ import jwt from "jsonwebtoken";
 import Asistencia from "../models/asistencia";
 import Clase from "../models/clase";
 import Usuario from "../models/usuario";
-import ClaseDias from "../models/claseDias"; // Ensure this path is correct
+import ClaseDias from "../models/claseDias";
+import Inscripcion from "../models/inscripcion";
 
 const usuarioController = {
   createUsuario: async (req: Request, res: Response) => {
@@ -157,8 +158,10 @@ const usuarioController = {
 
   clearDatabase: async (req: Request, res: Response) => {
     try {
-      await Asistencia.destroy({ where: {}, truncate: false, cascade: true });
       await Clase.destroy({ where: {}, truncate: false, cascade: true });
+      await Inscripcion.destroy({ where: {}, truncate: false, cascade: true });
+      await ClaseDias.destroy({ where: {}, truncate: false, cascade: true });
+      await Asistencia.destroy({ where: {}, truncate: false, cascade: true });
       await Usuario.destroy({ where: {}, truncate: false, cascade: true });
 
       res.status(200).json({ message: "Datos borrados exitosamente de todas las tablas" });
