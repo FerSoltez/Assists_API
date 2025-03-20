@@ -6,10 +6,34 @@ import Clase from "../models/clase";
 const inscripcionController = {
   createInscripcion: async (req: Request, res: Response) => {
     try {
-      const { id_clase, id_estudiante } = req.body;
+      const { codigo_clase, id_estudiante } = req.body;
 
-      const newInscripcion = await Inscripcion.create({ id_clase, id_estudiante });
-      res.status(201).json(newInscripcion);
+      // Verificar si el código de la clase es válido
+      const clase = await Clase.findOne({ where: { codigo_clase } });
+
+      if (!clase) {
+        return res.status(404).json({ message: "Código de clase inválido. No se encontró la clase." });
+      }
+
+      // Verificar si el estudiante ya está inscrito en la clase
+      const inscripcionExistente = await Inscripcion.findOne({
+        where: { id_clase: clase.id_clase, id_estudiante },
+      });
+
+      if (inscripcionExistente) {
+        return res.status(400).json({ message: "El estudiante ya está inscrito en esta clase." });
+      }
+
+      // Crear la inscripción
+      const newInscripcion = await Inscripcion.create({
+        id_clase: clase.id_clase,
+        id_estudiante,
+      });
+
+      res.status(201).json({
+        message: "Inscripción realizada exitosamente.",
+        inscripcion: newInscripcion,
+      });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }

@@ -5,7 +5,7 @@ import verifyOwnership from "../middleware/verifyOwnership";
 
 const router = Router();
 
-router.post("/inscripciones", authMiddleware, inscripcionController.createInscripcion);
+router.post("/inscripciones", authMiddleware, inscripcionController.createInscripcion as any);
 router.get("/inscripciones", authMiddleware, inscripcionController.getAllInscripciones);
 router.get("/inscripciones/:id", authMiddleware, inscripcionController.getInscripcion);
 router.delete("/inscripciones/:id", authMiddleware, inscripcionController.deleteInscripcion);
