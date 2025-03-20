@@ -4,7 +4,8 @@ import cors from "cors";
 import usuarioRoutes from './routes/usuarioRoutes';
 import clasesRoutes from './routes/claseRoutes';
 import asistenciaRoutes from "./routes/asistenciaRoutes";
-import claseDiasRoutes from "./routes/claseDiasRoutes"; // Importa las rutas de clase_dias
+import claseDiasRoutes from "./routes/claseDiasRoutes";
+import inscripcionRoutes from "./routes/inscripcionRoutes";
 
 dotenv.config();
 const app: Application = express();
@@ -18,6 +19,7 @@ app.use("/api", usuarioRoutes);
 app.use("/api", clasesRoutes);
 app.use("/api", asistenciaRoutes);
 app.use("/api", claseDiasRoutes);
+app.use("/api", inscripcionRoutes);
 
 // Ruta de prueba
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
