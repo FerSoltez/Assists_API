@@ -7,25 +7,28 @@ const claseController = {
   createClase: async (req: Request, res: Response) => {
     try {
       const { nombre_clase, horario, duracion, id_profesor, dias } = req.body;
-  
+
+      // Generar un código aleatorio de 6 dígitos
+      const codigo_clase = Math.random().toString(36).substring(2, 8).toUpperCase();
+
       // Crear la clase
-      const newClase = await Clase.create({ nombre_clase, horario, duracion, id_profesor });
-  
+      const newClase = await Clase.create({ nombre_clase, horario, duracion, id_profesor, codigo_clase });
+
       // Crear los registros en CLASE_DIAS si se proporcionan días
       if (dias && Array.isArray(dias)) {
         const claseDiasData = dias.map((dia: string) => ({
           id_clase: newClase.id_clase,
           dia_semana: dia,
         }));
-  
+
         await ClaseDias.bulkCreate(claseDiasData);
       }
-  
+
       // Obtener la clase con los días asociados
       const claseConDias = await Clase.findByPk(newClase.id_clase, {
         include: [{ model: ClaseDias }],
       });
-  
+
       res.status(201).json(claseConDias);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });

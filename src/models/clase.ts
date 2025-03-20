@@ -8,9 +8,10 @@ interface ClaseAttributes {
   horario: Date;
   duracion: number;
   id_profesor: number;
+  codigo_clase: string;
 }
 
-interface ClaseCreationAttributes extends Optional<ClaseAttributes, "id_clase"> {}
+interface ClaseCreationAttributes extends Optional<ClaseAttributes, "id_clase" | "codigo_clase"> {}
 
 class ClaseModel extends Model<ClaseAttributes, ClaseCreationAttributes> implements ClaseAttributes {
   public id_clase!: number;
@@ -18,6 +19,7 @@ class ClaseModel extends Model<ClaseAttributes, ClaseCreationAttributes> impleme
   public horario!: Date;
   public duracion!: number;
   public id_profesor!: number;
+  public codigo_clase!: string;
 }
 
 // Inicializar el modelo
@@ -43,6 +45,11 @@ ClaseModel.init(
     id_profesor: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    codigo_clase: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+      unique: true,
     },
   },
   {
