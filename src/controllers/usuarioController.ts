@@ -22,31 +22,31 @@ const usuarioController = {
   loginUsuario: async (req: Request, res: Response) => {
     try {
       const { email, contrasena } = req.body;
-
+  
       if (!email || !contrasena) {
         return res.status(400).json({ message: "Email y contraseña son requeridos" });
       }
-
+  
       const usuario = await Usuarios.findOne({ where: { email } });
-
+  
       if (!usuario) {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
-
+  
       if (usuario.intentos === 0) {
         return res.status(403).json({ message: "Cuenta bloqueada. Contacte al administrador." });
       }
-
+  
       const isPasswordValid = await bcrypt.compare(contrasena, usuario.contrasena);
       if (!isPasswordValid) {
         await Usuarios.update({ intentos: usuario.intentos - 1 }, { where: { id_usuario: usuario.id_usuario } });
         return res.status(401).json({ message: "Contraseña incorrecta. Intentos restantes: " + (usuario.intentos - 1) });
       }
-
+  
       await Usuarios.update({ intentos: 3 }, { where: { id_usuario: usuario.id_usuario } });
-
-      const token = jwt.sign({ id: usuario.id_usuario }, "your_jwt_secret", { expiresIn: "1h" });
-
+  
+      const token = jwt.sign({ id: usuario.id_usuario, id_tipo: usuario.id_tipo }, "your_jwt_secret", { expiresIn: "1h" });
+  
       res.status(200).json({ 
         message: "Inicio de sesión exitoso", 
         token,
@@ -73,7 +73,18 @@ const usuarioController = {
 
   getUsuario: async (req: Request, res: Response) => {
     try {
-      const usuario = await Usuarios.findByPk(req.params.id);
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
+      const { id } = req.params;
+  
+      // Verificar si el usuario autenticado está intentando acceder a sus propios datos
+      if (parseInt(id) !== userId) {
+        return res.status(403).json({ message: "Acceso denegado. No puedes ver los datos de otro usuario." });
+      }
+  
+      const usuario = await Usuarios.findByPk(id);
   
       if (!usuario) {
         return res.status(404).json({ message: "Usuario no encontrado" });
@@ -84,13 +95,14 @@ const usuarioController = {
       if (Number(usuario.id_tipo) === 1) {
         // Si el usuario es un profesor (id_tipo = 1), obtener sus clases con los días
         const clases = await Clase.findAll({
-          include: [{ model: ClaseDias }], // Ensure ClaseDias is correctly defined in the imported module
+          where: { id_profesor: userId }, // Filtrar clases por el ID del profesor
+          include: [{ model: ClaseDias }], // Asegúrate de que ClaseDias esté correctamente definido
         });
         additionalData = { clases };
       } else if (Number(usuario.id_tipo) === 2) {
         // Si el usuario es un estudiante (id_tipo = 2), obtener sus asistencias
         const asistencias = await Asistencia.findAll({
-          where: { id_estudiante: usuario.id_usuario },
+          where: { id_estudiante: userId }, // Filtrar asistencias por el ID del estudiante
         });
         additionalData = { asistencias };
       }
