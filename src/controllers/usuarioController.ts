@@ -205,6 +205,30 @@ const usuarioController = {
       res.status(500).json({ error: (error as Error).message });
     }
   },
+
+  changePassword: async (req: Request, res: Response) => {
+    try {
+      const { email, nuevaContrasena } = req.body;
+  
+      if (!email || !nuevaContrasena) {
+        return res.status(400).json({ message: "Email y nueva contraseña son requeridos" });
+      }
+  
+      const usuario = await Usuarios.findOne({ where: { email } });
+  
+      if (!usuario) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+  
+      const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
+  
+      await Usuarios.update({ contrasena: hashedPassword }, { where: { email } });
+  
+      res.status(200).json({ message: "Contraseña actualizada exitosamente" });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  },
 };
 
 export default usuarioController;

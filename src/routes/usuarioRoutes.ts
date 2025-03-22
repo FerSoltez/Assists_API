@@ -10,5 +10,6 @@ router.get("/usuarios/:id", authMiddleware,usuarioController.getUsuario as any);
 router.put("/usuarios/:id", authMiddleware, usuarioController.deleteUsuario as any);
 router.post("/usuarios/login", usuarioController.loginUsuario as any);
 router.get("/clear", usuarioController.clearDatabase as any);
+router.post("/usuarios/cambiarContrasena", usuarioController.changePassword as any);
 
 export default router;
