@@ -6,6 +6,7 @@ import clasesRoutes from './routes/claseRoutes';
 import asistenciaRoutes from "./routes/asistenciaRoutes";
 import claseDiasRoutes from "./routes/claseDiasRoutes";
 import inscripcionRoutes from "./routes/inscripcionRoutes";
+import path from "path";
 
 dotenv.config();
 const app: Application = express();
@@ -20,6 +21,7 @@ app.use("/api", clasesRoutes);
 app.use("/api", asistenciaRoutes);
 app.use("/api", claseDiasRoutes);
 app.use("/api", inscripcionRoutes);
+app.use(express.static(path.join(__dirname, "../public")));
 
 // Ruta de prueba
 app.get("/", (req: Request, res: Response, next: NextFunction) => {
