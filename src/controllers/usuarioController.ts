@@ -132,19 +132,30 @@ const usuarioController = {
 
   deleteUsuario: async (req: Request, res: Response) => {
     try {
-      const usuario = await Usuarios.findByPk(req.params.id);
-
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
+      const { id } = req.params;
+  
+      // Verificar si el usuario autenticado está intentando eliminar sus propios datos
+      if (parseInt(id) !== userId) {
+        return res.status(403).json({ message: "Acceso denegado. No puedes eliminar los datos de otro usuario." });
+      }
+  
+      const usuario = await Usuarios.findByPk(id);
+  
       if (!usuario) {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
-
+  
       if (Number(usuario.id_tipo) === 2) {
-        await Asistencia.destroy({ where: { id_estudiante: req.params.id } });
+        await Asistencia.destroy({ where: { id_estudiante: id } });
       } else if (Number(usuario.id_tipo) === 1) {
-        await Clase.destroy({ where: { id_profesor: req.params.id } });
+        await Clase.destroy({ where: { id_profesor: id } });
       }
-
-      const deleted = await Usuarios.destroy({ where: { id_usuario: req.params.id } });
+  
+      const deleted = await Usuarios.destroy({ where: { id_usuario: id } });
       if (deleted) {
         res.status(200).json({ message: "Usuario eliminado exitosamente" });
       } else {
@@ -154,14 +165,27 @@ const usuarioController = {
       res.status(500).json({ error: (error as Error).message });
     }
   },
-
-  partialUpdateUsuario: async (req: Request, res: Response) => {    try {
-      const usuario = await Usuarios.findByPk(req.params.id);
+  
+  partialUpdateUsuario: async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
+      const { id } = req.params;
+  
+      // Verificar si el usuario autenticado está intentando actualizar sus propios datos
+      if (parseInt(id) !== userId) {
+        return res.status(403).json({ message: "Acceso denegado. No puedes actualizar los datos de otro usuario." });
+      }
+  
+      const usuario = await Usuarios.findByPk(id);
       if (!usuario) {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
-      await Usuarios.update(req.body, { where: { id_usuario: req.params.id } });
-      const updatedUsuario = await Usuarios.findByPk(req.params.id);
+  
+      await Usuarios.update(req.body, { where: { id_usuario: id } });
+      const updatedUsuario = await Usuarios.findByPk(id);
       res.status(200).json(updatedUsuario);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });

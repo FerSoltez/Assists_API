@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { sequelize } from "../config/database"; // Asegúrate de importar tu instancia de Sequelize
 import Clase from "../models/clase";
 import ClaseDias from "../models/claseDias";
+import jwt from "jsonwebtoken";
 
 const claseController = {
   createClase: async (req: Request, res: Response) => {
@@ -73,7 +73,20 @@ const claseController = {
 
   deleteClase: async (req: Request, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
       const { id } = req.params;
+  
+      // Verificar si la clase pertenece al usuario autenticado
+      const clase = await Clase.findByPk(id);
+      if (!clase) {
+        return res.status(404).json({ message: "Clase no encontrada" });
+      }
+      if (clase.id_profesor !== userId) {
+        return res.status(403).json({ message: "Acceso denegado. No puedes eliminar una clase que no te pertenece." });
+      }
   
       // Eliminar los días asociados en CLASE_DIAS
       await ClaseDias.destroy({ where: { id_clase: id } });
@@ -90,25 +103,46 @@ const claseController = {
       res.status(500).json({ error: (error as Error).message });
     }
   },
-
+  
   partialUpdateClase: async (req: Request, res: Response) => {
     try {
-      const clase = await Clase.findByPk(req.params.id);
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
+      const { id } = req.params;
+  
+      // Verificar si la clase pertenece al usuario autenticado
+      const clase = await Clase.findByPk(id);
       if (!clase) {
         return res.status(404).json({ message: "Clase no encontrada" });
       }
-
-      await Clase.update(req.body, { where: { id_clase: req.params.id } });
-      const updatedClase = await Clase.findByPk(req.params.id);
+      if (clase.id_profesor !== userId) {
+        return res.status(403).json({ message: "Acceso denegado. No puedes actualizar una clase que no te pertenece." });
+      }
+  
+      await Clase.update(req.body, { where: { id_clase: id } });
+      const updatedClase = await Clase.findByPk(id);
       res.status(200).json(updatedClase);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
   },
-
+  
   getClasesByUsuarioId: async (req: Request, res: Response) => {
     try {
-      const clases = await Clase.findAll({ where: { id_profesor: req.params.id } });
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
+      const { id } = req.params;
+  
+      // Verificar si el usuario autenticado está intentando acceder a sus propias clases
+      if (parseInt(id) !== userId) {
+        return res.status(403).json({ message: "Acceso denegado. No puedes ver las clases de otro usuario." });
+      }
+  
+      const clases = await Clase.findAll({ where: { id_profesor: id } });
       res.status(200).json(clases);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
