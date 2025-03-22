@@ -31,6 +31,11 @@ ClaseModel.init({
         type: sequelize_1.DataTypes.INTEGER,
         allowNull: false,
     },
+    codigo_clase: {
+        type: sequelize_1.DataTypes.STRING(10),
+        allowNull: false,
+        unique: true,
+    },
 }, {
     sequelize: database_1.sequelize,
     modelName: "Clase",

@@ -9,7 +9,9 @@ const cors_1 = __importDefault(require("cors"));
 const usuarioRoutes_1 = __importDefault(require("./routes/usuarioRoutes"));
 const claseRoutes_1 = __importDefault(require("./routes/claseRoutes"));
 const asistenciaRoutes_1 = __importDefault(require("./routes/asistenciaRoutes"));
-const claseDiasRoutes_1 = __importDefault(require("./routes/claseDiasRoutes")); // Importa las rutas de clase_dias
+const claseDiasRoutes_1 = __importDefault(require("./routes/claseDiasRoutes"));
+const inscripcionRoutes_1 = __importDefault(require("./routes/inscripcionRoutes"));
+const path_1 = __importDefault(require("path"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 // Middlewares  
@@ -20,6 +22,8 @@ app.use("/api", usuarioRoutes_1.default);
 app.use("/api", claseRoutes_1.default);
 app.use("/api", asistenciaRoutes_1.default);
 app.use("/api", claseDiasRoutes_1.default);
+app.use("/api", inscripcionRoutes_1.default);
+app.use(express_1.default.static(path_1.default.join(__dirname, "../public")));
 // Ruta de prueba
 app.get("/", (req, res, next) => {
     res.send("¡API en funcionamiento!");

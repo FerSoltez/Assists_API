@@ -63,7 +63,20 @@ const asistenciaController = {
     }),
     deleteAsistencia: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const deleted = yield asistencia_1.default.destroy({ where: { id_asistencia: req.params.id } });
+            if (!req.user) {
+                return res.status(401).json({ message: "Usuario no autenticado" });
+            }
+            const userId = req.user.id; // ID del usuario autenticado extraído del token
+            const { id } = req.params;
+            // Verificar si la asistencia pertenece al usuario autenticado
+            const asistencia = yield asistencia_1.default.findByPk(id);
+            if (!asistencia) {
+                return res.status(404).json({ message: "Asistencia no encontrada" });
+            }
+            if (asistencia.id_estudiante !== userId) {
+                return res.status(403).json({ message: "Acceso denegado. No puedes eliminar una asistencia que no te pertenece." });
+            }
+            const deleted = yield asistencia_1.default.destroy({ where: { id_asistencia: id } });
             if (deleted) {
                 res.status(200).json({ message: "Asistencia eliminada exitosamente" });
             }
@@ -77,12 +90,21 @@ const asistenciaController = {
     }),
     partialUpdateAsistencia: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const asistencia = yield asistencia_1.default.findByPk(req.params.id);
+            if (!req.user) {
+                return res.status(401).json({ message: "Usuario no autenticado" });
+            }
+            const userId = req.user.id; // ID del usuario autenticado extraído del token
+            const { id } = req.params;
+            // Verificar si la asistencia pertenece al usuario autenticado
+            const asistencia = yield asistencia_1.default.findByPk(id);
             if (!asistencia) {
                 return res.status(404).json({ message: "Asistencia no encontrada" });
             }
-            yield asistencia_1.default.update(req.body, { where: { id_asistencia: req.params.id } });
-            const updatedAsistencia = yield asistencia_1.default.findByPk(req.params.id);
+            if (asistencia.id_estudiante !== userId) {
+                return res.status(403).json({ message: "Acceso denegado. No puedes actualizar una asistencia que no te pertenece." });
+            }
+            yield asistencia_1.default.update(req.body, { where: { id_asistencia: id } });
+            const updatedAsistencia = yield asistencia_1.default.findByPk(id);
             res.status(200).json(updatedAsistencia);
         }
         catch (error) {
@@ -91,7 +113,16 @@ const asistenciaController = {
     }),
     getAsistenciasByUsuarioId: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const asistencias = yield asistencia_1.default.findAll({ where: { id_estudiante: req.params.id } });
+            if (!req.user) {
+                return res.status(401).json({ message: "Usuario no autenticado" });
+            }
+            const userId = req.user.id; // ID del usuario autenticado extraído del token
+            const { id } = req.params;
+            // Verificar si el usuario autenticado está intentando acceder a sus propias asistencias
+            if (parseInt(id) !== userId) {
+                return res.status(403).json({ message: "Acceso denegado. No puedes ver las asistencias de otro usuario." });
+            }
+            const asistencias = yield asistencia_1.default.findAll({ where: { id_estudiante: id } });
             res.status(200).json(asistencias);
         }
         catch (error) {

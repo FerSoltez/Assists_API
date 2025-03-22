@@ -18,8 +18,10 @@ const claseController = {
     createClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { nombre_clase, horario, duracion, id_profesor, dias } = req.body;
+            // Generar un código aleatorio de 6 dígitos
+            const codigo_clase = Math.random().toString(36).substring(2, 8).toUpperCase();
             // Crear la clase
-            const newClase = yield clase_1.default.create({ nombre_clase, horario, duracion, id_profesor });
+            const newClase = yield clase_1.default.create({ nombre_clase, horario, duracion, id_profesor, codigo_clase });
             // Crear los registros en CLASE_DIAS si se proporcionan días
             if (dias && Array.isArray(dias)) {
                 const claseDiasData = dias.map((dia) => ({
@@ -78,7 +80,19 @@ const claseController = {
     }),
     deleteClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
+            if (!req.user) {
+                return res.status(401).json({ message: "Usuario no autenticado" });
+            }
+            const userId = req.user.id; // ID del usuario autenticado extraído del token
             const { id } = req.params;
+            // Verificar si la clase pertenece al usuario autenticado
+            const clase = yield clase_1.default.findByPk(id);
+            if (!clase) {
+                return res.status(404).json({ message: "Clase no encontrada" });
+            }
+            if (clase.id_profesor !== userId) {
+                return res.status(403).json({ message: "Acceso denegado. No puedes eliminar una clase que no te pertenece." });
+            }
             // Eliminar los días asociados en CLASE_DIAS
             yield claseDias_1.default.destroy({ where: { id_clase: id } });
             // Eliminar la clase en CLASE
@@ -96,12 +110,21 @@ const claseController = {
     }),
     partialUpdateClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const clase = yield clase_1.default.findByPk(req.params.id);
+            if (!req.user) {
+                return res.status(401).json({ message: "Usuario no autenticado" });
+            }
+            const userId = req.user.id; // ID del usuario autenticado extraído del token
+            const { id } = req.params;
+            // Verificar si la clase pertenece al usuario autenticado
+            const clase = yield clase_1.default.findByPk(id);
             if (!clase) {
                 return res.status(404).json({ message: "Clase no encontrada" });
             }
-            yield clase_1.default.update(req.body, { where: { id_clase: req.params.id } });
-            const updatedClase = yield clase_1.default.findByPk(req.params.id);
+            if (clase.id_profesor !== userId) {
+                return res.status(403).json({ message: "Acceso denegado. No puedes actualizar una clase que no te pertenece." });
+            }
+            yield clase_1.default.update(req.body, { where: { id_clase: id } });
+            const updatedClase = yield clase_1.default.findByPk(id);
             res.status(200).json(updatedClase);
         }
         catch (error) {
@@ -110,7 +133,16 @@ const claseController = {
     }),
     getClasesByUsuarioId: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const clases = yield clase_1.default.findAll({ where: { id_profesor: req.params.id } });
+            if (!req.user) {
+                return res.status(401).json({ message: "Usuario no autenticado" });
+            }
+            const userId = req.user.id; // ID del usuario autenticado extraído del token
+            const { id } = req.params;
+            // Verificar si el usuario autenticado está intentando acceder a sus propias clases
+            if (parseInt(id) !== userId) {
+                return res.status(403).json({ message: "Acceso denegado. No puedes ver las clases de otro usuario." });
+            }
+            const clases = yield clase_1.default.findAll({ where: { id_profesor: id } });
             res.status(200).json(clases);
         }
         catch (error) {

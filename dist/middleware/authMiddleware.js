@@ -13,7 +13,7 @@ const authMiddleware = (req, res, next) => {
     }
     try {
         const decoded = jsonwebtoken_1.default.verify(token, "your_jwt_secret");
-        req.user = decoded;
+        req.user = decoded; // Agrega el usuario decodificado al request
         next();
     }
     catch (error) {

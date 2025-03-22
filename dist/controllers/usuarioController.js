@@ -18,7 +18,8 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const asistencia_1 = __importDefault(require("../models/asistencia"));
 const clase_1 = __importDefault(require("../models/clase"));
 const usuario_2 = __importDefault(require("../models/usuario"));
-const claseDias_1 = __importDefault(require("../models/claseDias")); // Ensure this path is correct
+const claseDias_1 = __importDefault(require("../models/claseDias"));
+const inscripcion_1 = __importDefault(require("../models/inscripcion"));
 const usuarioController = {
     createUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -49,7 +50,7 @@ const usuarioController = {
                 return res.status(401).json({ message: "Contraseña incorrecta. Intentos restantes: " + (usuario.intentos - 1) });
             }
             yield usuario_1.default.update({ intentos: 3 }, { where: { id_usuario: usuario.id_usuario } });
-            const token = jsonwebtoken_1.default.sign({ id: usuario.id_usuario }, "your_jwt_secret", { expiresIn: "1h" });
+            const token = jsonwebtoken_1.default.sign({ id: usuario.id_usuario, id_tipo: usuario.id_tipo }, "your_jwt_secret", { expiresIn: "1h" });
             res.status(200).json({
                 message: "Inicio de sesión exitoso",
                 token,
@@ -76,7 +77,16 @@ const usuarioController = {
     }),
     getUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const usuario = yield usuario_1.default.findByPk(req.params.id);
+            if (!req.user) {
+                return res.status(401).json({ message: "Usuario no autenticado" });
+            }
+            const userId = req.user.id; // ID del usuario autenticado extraído del token
+            const { id } = req.params;
+            // Verificar si el usuario autenticado está intentando acceder a sus propios datos
+            if (parseInt(id) !== userId) {
+                return res.status(403).json({ message: "Acceso denegado. No puedes ver los datos de otro usuario." });
+            }
+            const usuario = yield usuario_1.default.findByPk(id);
             if (!usuario) {
                 return res.status(404).json({ message: "Usuario no encontrado" });
             }
@@ -84,14 +94,15 @@ const usuarioController = {
             if (Number(usuario.id_tipo) === 1) {
                 // Si el usuario es un profesor (id_tipo = 1), obtener sus clases con los días
                 const clases = yield clase_1.default.findAll({
-                    include: [{ model: claseDias_1.default }], // Ensure ClaseDias is correctly defined in the imported module
+                    where: { id_profesor: userId }, // Filtrar clases por el ID del profesor
+                    include: [{ model: claseDias_1.default }], // Asegúrate de que ClaseDias esté correctamente definido
                 });
                 additionalData = { clases };
             }
             else if (Number(usuario.id_tipo) === 2) {
                 // Si el usuario es un estudiante (id_tipo = 2), obtener sus asistencias
                 const asistencias = yield asistencia_1.default.findAll({
-                    where: { id_estudiante: usuario.id_usuario },
+                    where: { id_estudiante: userId }, // Filtrar asistencias por el ID del estudiante
                 });
                 additionalData = { asistencias };
             }
@@ -118,17 +129,26 @@ const usuarioController = {
     }),
     deleteUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const usuario = yield usuario_1.default.findByPk(req.params.id);
+            if (!req.user) {
+                return res.status(401).json({ message: "Usuario no autenticado" });
+            }
+            const userId = req.user.id; // ID del usuario autenticado extraído del token
+            const { id } = req.params;
+            // Verificar si el usuario autenticado está intentando eliminar sus propios datos
+            if (parseInt(id) !== userId) {
+                return res.status(403).json({ message: "Acceso denegado. No puedes eliminar los datos de otro usuario." });
+            }
+            const usuario = yield usuario_1.default.findByPk(id);
             if (!usuario) {
                 return res.status(404).json({ message: "Usuario no encontrado" });
             }
             if (Number(usuario.id_tipo) === 2) {
-                yield asistencia_1.default.destroy({ where: { id_estudiante: req.params.id } });
+                yield asistencia_1.default.destroy({ where: { id_estudiante: id } });
             }
             else if (Number(usuario.id_tipo) === 1) {
-                yield clase_1.default.destroy({ where: { id_profesor: req.params.id } });
+                yield clase_1.default.destroy({ where: { id_profesor: id } });
             }
-            const deleted = yield usuario_1.default.destroy({ where: { id_usuario: req.params.id } });
+            const deleted = yield usuario_1.default.destroy({ where: { id_usuario: id } });
             if (deleted) {
                 res.status(200).json({ message: "Usuario eliminado exitosamente" });
             }
@@ -142,12 +162,21 @@ const usuarioController = {
     }),
     partialUpdateUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const usuario = yield usuario_1.default.findByPk(req.params.id);
+            if (!req.user) {
+                return res.status(401).json({ message: "Usuario no autenticado" });
+            }
+            const userId = req.user.id; // ID del usuario autenticado extraído del token
+            const { id } = req.params;
+            // Verificar si el usuario autenticado está intentando actualizar sus propios datos
+            if (parseInt(id) !== userId) {
+                return res.status(403).json({ message: "Acceso denegado. No puedes actualizar los datos de otro usuario." });
+            }
+            const usuario = yield usuario_1.default.findByPk(id);
             if (!usuario) {
                 return res.status(404).json({ message: "Usuario no encontrado" });
             }
-            yield usuario_1.default.update(req.body, { where: { id_usuario: req.params.id } });
-            const updatedUsuario = yield usuario_1.default.findByPk(req.params.id);
+            yield usuario_1.default.update(req.body, { where: { id_usuario: id } });
+            const updatedUsuario = yield usuario_1.default.findByPk(id);
             res.status(200).json(updatedUsuario);
         }
         catch (error) {
@@ -156,10 +185,30 @@ const usuarioController = {
     }),
     clearDatabase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            yield asistencia_1.default.destroy({ where: {}, truncate: false, cascade: true });
             yield clase_1.default.destroy({ where: {}, truncate: false, cascade: true });
+            yield inscripcion_1.default.destroy({ where: {}, truncate: false, cascade: true });
+            yield claseDias_1.default.destroy({ where: {}, truncate: false, cascade: true });
+            yield asistencia_1.default.destroy({ where: {}, truncate: false, cascade: true });
             yield usuario_2.default.destroy({ where: {}, truncate: false, cascade: true });
             res.status(200).json({ message: "Datos borrados exitosamente de todas las tablas" });
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }),
+    changePassword: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const { email, nuevaContrasena } = req.body;
+            if (!email || !nuevaContrasena) {
+                return res.status(400).json({ message: "Email y nueva contraseña son requeridos" });
+            }
+            const usuario = yield usuario_1.default.findOne({ where: { email } });
+            if (!usuario) {
+                return res.status(404).json({ message: "Usuario no encontrado" });
+            }
+            const hashedPassword = yield bcryptjs_1.default.hash(nuevaContrasena, 10);
+            yield usuario_1.default.update({ contrasena: hashedPassword }, { where: { email } });
+            res.status(200).json({ message: "Contraseña actualizada exitosamente" });
         }
         catch (error) {
             res.status(500).json({ error: error.message });
