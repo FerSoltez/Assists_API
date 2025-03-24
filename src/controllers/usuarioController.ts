@@ -234,11 +234,19 @@ const usuarioController = {
   sendPasswordResetEmail: async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
-
+  
       if (!email) {
         return res.status(400).json({ message: "El correo electrónico es requerido." });
       }
-
+  
+      // Buscar al usuario por correo electrónico
+      const usuario = await Usuarios.findOne({ where: { email } });
+      if (!usuario) {
+        return res.status(404).json({ message: "Usuario no encontrado." });
+      }
+  
+      const nombreUsuario = usuario.nombre; // Obtener el nombre del usuario
+  
       const mailOptions = {
         from: '"Soporte Assists" <tu_correo@gmail.com>',
         to: email,
@@ -246,13 +254,13 @@ const usuarioController = {
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
             <div style="background-color: #1a1a1a; color: white; padding: 20px; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px;">ASSISTS</h1>
+              <h1 style="margin: 0; font-size: 24px; color: #f9f9f9;">School Guardian</h1>
             </div>
             
             <div style="padding: 30px; line-height: 1.6;">
               <div style="font-size: 24px; font-weight: 600; margin-bottom: 20px; text-align: center; color: #333;">Cambio de Contraseña</div>
               
-              <p style="margin-bottom: 15px;">Hola,</p>
+              <p style="margin-bottom: 15px;">Hola, <strong>${nombreUsuario}</strong>,</p>
               
               <p style="margin-bottom: 20px;">Hemos recibido una solicitud para cambiar tu contraseña. Para continuar con este proceso, haz clic en el siguiente botón:</p>
               
@@ -272,9 +280,9 @@ const usuarioController = {
           </div>
         `,
       };
-
+  
       await transporter.sendMail(mailOptions);
-
+  
       res.status(200).json({ message: "Correo enviado exitosamente." });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
