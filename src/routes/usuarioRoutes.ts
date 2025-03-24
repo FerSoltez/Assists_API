@@ -11,5 +11,6 @@ router.patch("/usuarios/:id", authMiddleware, usuarioController.deleteUsuario as
 router.post("/usuarios/login", usuarioController.loginUsuario as any);
 router.get("/clear", usuarioController.clearDatabase as any);
 router.post("/usuarios/cambiarContrasena", usuarioController.changePassword as any);
+router.post("/usuarios/enviarCorreoCambioContrasena", usuarioController.sendPasswordResetEmail as any);
 
 export default router;

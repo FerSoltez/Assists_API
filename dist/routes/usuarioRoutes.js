@@ -14,4 +14,5 @@ router.patch("/usuarios/:id", authMiddleware_1.default, usuarioController_1.defa
 router.post("/usuarios/login", usuarioController_1.default.loginUsuario);
 router.get("/clear", usuarioController_1.default.clearDatabase);
 router.post("/usuarios/cambiarContrasena", usuarioController_1.default.changePassword);
+router.post("/usuarios/enviarCorreoCambioContrasena", usuarioController_1.default.sendPasswordResetEmail);
 exports.default = router;

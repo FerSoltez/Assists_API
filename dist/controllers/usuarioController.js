@@ -20,6 +20,7 @@ const clase_1 = __importDefault(require("../models/clase"));
 const usuario_2 = __importDefault(require("../models/usuario"));
 const claseDias_1 = __importDefault(require("../models/claseDias"));
 const inscripcion_1 = __importDefault(require("../models/inscripcion"));
+const emailTransporter_1 = __importDefault(require("../utils/emailTransporter"));
 const usuarioController = {
     createUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -209,6 +210,30 @@ const usuarioController = {
             const hashedPassword = yield bcryptjs_1.default.hash(nuevaContrasena, 10);
             yield usuario_1.default.update({ contrasena: hashedPassword }, { where: { email } });
             res.status(200).json({ message: "Contraseña actualizada exitosamente" });
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }),
+    sendPasswordResetEmail: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const { email } = req.body;
+            if (!email) {
+                return res.status(400).json({ message: "El correo electrónico es requerido." });
+            }
+            const mailOptions = {
+                from: '"Soporte Assists" <tu_correo@gmail.com>',
+                to: email,
+                subject: "Cambio de Contraseña",
+                html: `
+          <p>Hola,</p>
+          <p>Hemos recibido una solicitud para cambiar tu contraseña. Haz clic en el siguiente enlace para cambiarla:</p>
+          <a href="https://assists-api.onrender.com/cambiarContrasena.html" style="padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Cambiar Contraseña</a>
+          <p>Si no solicitaste este cambio, ignora este correo.</p>
+        `,
+            };
+            yield emailTransporter_1.default.sendMail(mailOptions);
+            res.status(200).json({ message: "Correo enviado exitosamente." });
         }
         catch (error) {
             res.status(500).json({ error: error.message });
