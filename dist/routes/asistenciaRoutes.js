@@ -11,8 +11,8 @@ const router = (0, express_1.Router)();
 router.post("/asistencias", authMiddleware_1.default, (0, roleMiddleware_1.roleMiddleware)([1]), asistenciaController_1.default.createAsistencia); // Solo profesores
 router.get("/asistencias", authMiddleware_1.default, asistenciaController_1.default.getAllAsistencias);
 router.get("/asistencias/:id", authMiddleware_1.default, asistenciaController_1.default.getAsistencia);
-router.put("/asistencias/:id", authMiddleware_1.default, asistenciaController_1.default.updateAsistencia);
+router.patch("/asistencias/:id", authMiddleware_1.default, asistenciaController_1.default.updateAsistencia);
 router.delete("/asistencias/:id", authMiddleware_1.default, asistenciaController_1.default.deleteAsistencia);
 router.patch("/asistencias/:id", authMiddleware_1.default, asistenciaController_1.default.partialUpdateAsistencia);
-router.get("/asistencias/usuario/:id", authMiddleware_1.default, asistenciaController_1.default.getAsistenciasByUsuarioId);
+router.get("/asistencias/usuario/:id", authMiddleware_1.default, (0, roleMiddleware_1.roleMiddleware)([2]), asistenciaController_1.default.getAsistenciasByUsuarioId);
 exports.default = router;
