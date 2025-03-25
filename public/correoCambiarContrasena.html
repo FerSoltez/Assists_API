@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cambiar Contraseña | School Guardian</title>
+  <title>Enviar Correo | School Guardian</title>
   <style>
     :root {
       --primary-color: #1a1a1a;
@@ -124,21 +124,6 @@
       box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
     }
     
-    .password-input-wrapper {
-      position: relative;
-    }
-    
-    .password-toggle {
-      position: absolute;
-      right: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: #666;
-      cursor: pointer;
-    }
-    
     .btn {
       display: block;
       width: 100%;
@@ -220,21 +205,16 @@
   
   <div class="main-content">
     <div class="card">
-      <h1 class="card-title">Cambiar Contraseña</h1>
-      <p class="card-subtitle">Ingresa tu nueva contraseña para actualizar tu cuenta</p>
+      <h1 class="card-title">Enviar Correo</h1>
+      <p class="card-subtitle">Ingresa tu correo electrónico para recibir un enlace de cambio de contraseña</p>
       
-      <form id="changePasswordForm">
+      <form id="sendEmailForm">
         <div class="form-group">
-          <label for="nuevaContrasena" class="form-label">Nueva Contraseña</label>
-          <div class="password-input-wrapper">
-            <input type="password" id="nuevaContrasena" name="nuevaContrasena" class="form-control" placeholder="Ingresa tu nueva contraseña" required>
-            <button type="button" class="password-toggle" id="togglePassword">
-              <!-- Icono de visibilidad -->
-            </button>
-          </div>
+          <label for="email" class="form-label">Correo Electrónico</label>
+          <input type="email" id="email" name="email" class="form-control" placeholder="tu.email@example.com" required>
         </div>
         
-        <button type="submit" class="btn btn-primary">Cambiar Contraseña</button>
+        <button type="submit" class="btn btn-primary">Enviar Correo</button>
       </form>
       
       <div class="message" id="message" style="display: none;"></div>
@@ -246,38 +226,35 @@
   </div>
 
   <script>
-    const form = document.getElementById('changePasswordForm');
+    const form = document.getElementById('sendEmailForm');
     const messageDiv = document.getElementById('message');
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      const nuevaContrasena = document.getElementById('nuevaContrasena').value;
-
-      if (!token) {
-        alert('Token no encontrado. Por favor, revisa el enlace.');
-        return;
-      }
+      const email = document.getElementById('email').value;
 
       try {
-        const response = await fetch('https://assists-api.onrender.com/api/usuarios/cambiarContrasena', {
+        messageDiv.style.display = 'block';
+        messageDiv.textContent = 'Procesando solicitud...';
+        messageDiv.className = 'message';
+        
+        const response = await fetch('https://assists-api.onrender.com/api/usuarios/enviarCorreoCambioContrasena', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ token, nuevaContrasena }),
+          body: JSON.stringify({ email }),
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          messageDiv.textContent = data.message || 'Contraseña actualizada exitosamente.';
+          messageDiv.textContent = data.message || 'Correo enviado exitosamente.';
           messageDiv.className = 'message success';
           form.reset();
         } else {
-          messageDiv.textContent = data.message || 'Error al cambiar la contraseña.';
+          messageDiv.textContent = data.message || 'Error al enviar el correo.';
           messageDiv.className = 'message error';
         }
       } catch (error) {
