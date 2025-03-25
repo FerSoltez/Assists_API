@@ -3,7 +3,7 @@ import Clase from "../models/clase";
 import ClaseDias from "../models/claseDias";
 import jwt from "jsonwebtoken";
 import Inscripcion from "../models/inscripcion";
-import Usuarios from "../models/usuario"; // Import the Usuarios model
+import Usuario from "../models/usuario"; // Import the Usuario model
 
 const claseController = {
   createClase: async (req: Request, res: Response) => {
@@ -146,7 +146,7 @@ const claseController = {
       }
   
       // Obtener el usuario autenticado
-      const usuario = await Usuarios.findOne({ where: { id_usuario: id } });
+      const usuario = await Usuario.findOne({ where: { id_usuario: id } });
   
       if (!usuario) {
         return res.status(404).json({ message: "Usuario no encontrado" });
@@ -165,12 +165,12 @@ const claseController = {
         clases = await Clase.findAll({
           include: [
             {
-              model: Inscripcion, // Modelo de inscripción
-              where: { id_alumno: id }, // Relación con el alumno
+              model: Inscripcion,
+              required: true, // Asegura que solo se devuelvan clases con inscripciones
+              where: { id_estudiante: id }, // Cambiado de id_alumno a id_estudiante
             },
           ],
         });
-        console.log("Clases encontradas para el alumno:", clases);
       } else {
         return res.status(400).json({ message: "Tipo de usuario no válido" });
       }
