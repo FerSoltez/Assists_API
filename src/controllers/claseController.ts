@@ -170,6 +170,7 @@ const claseController = {
             },
           ],
         });
+        console.log("Clases encontradas para el alumno:", clases);
       } else {
         return res.status(400).json({ message: "Tipo de usuario no válido" });
       }
