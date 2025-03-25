@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Usuarios from "../models/usuario";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
 import Asistencia from "../models/asistencia";
 import Clase from "../models/clase";
 import Usuario from "../models/usuario";
@@ -209,10 +209,19 @@ const usuarioController = {
 
   changePassword: async (req: Request, res: Response) => {
     try {
-      const { email, nuevaContrasena } = req.body;
+      const { token, nuevaContrasena } = req.body;
   
-      if (!email || !nuevaContrasena) {
-        return res.status(400).json({ message: "Email y nueva contraseña son requeridos" });
+      if (!token || !nuevaContrasena) {
+        return res.status(400).json({ message: "Token y nueva contraseña son requeridos" });
+      }
+  
+      // Verificar el token
+      let email: string;
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key') as { email: string };
+        email = decoded.email;
+      } catch (error) {
+        return res.status(400).json({ message: "Token inválido o expirado" });
       }
   
       const usuario = await Usuarios.findOne({ where: { email } });
@@ -230,7 +239,7 @@ const usuarioController = {
       res.status(500).json({ error: (error as Error).message });
     }
   },
-
+  
   sendPasswordResetEmail: async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
@@ -239,45 +248,22 @@ const usuarioController = {
         return res.status(400).json({ message: "El correo electrónico es requerido." });
       }
   
-      // Buscar al usuario por correo electrónico
       const usuario = await Usuarios.findOne({ where: { email } });
       if (!usuario) {
         return res.status(404).json({ message: "Usuario no encontrado." });
       }
   
-      const nombreUsuario = usuario.nombre; // Obtener el nombre del usuario
+      const token = jwt.sign({ email }, process.env.JWT_SECRET || 'secret_key', { expiresIn: '24h' });
   
       const mailOptions = {
         from: '"Soporte Assists" <tu_correo@gmail.com>',
         to: email,
         subject: "Cambio de Contraseña",
         html: `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
-            <div style="background-color: #1a1a1a; color: white; padding: 20px; text-align: center;">
-              <h1 style="margin: 0; font-size: 24px; color: #f9f9f9;">School Guardian</h1>
-            </div>
-            
-            <div style="padding: 30px; line-height: 1.6;">
-              <div style="font-size: 24px; font-weight: 600; margin-bottom: 20px; text-align: center; color: #333;">Cambio de Contraseña</div>
-              
-              <p style="margin-bottom: 15px;">Hola, <strong>${nombreUsuario}</strong>,</p>
-              
-              <p style="margin-bottom: 20px;">Hemos recibido una solicitud para cambiar tu contraseña. Para continuar con este proceso, haz clic en el siguiente botón:</p>
-              
-              <div style="text-align: center; margin: 25px 0;">
-                <a href="https://assists-api.onrender.com/cambiarContrasena.html" style="display: inline-block; background-color: #1a1a1a; color: white; text-decoration: none; padding: 12px 30px; border-radius: 5px; font-weight: 500;">Cambiar Contraseña</a>
-              </div>
-              
-              <div style="margin-top: 25px; padding: 15px; background-color: #f9f9f9; border-radius: 5px; font-size: 14px;">
-                <p style="margin-top: 0;">Si no solicitaste este cambio, puedes ignorar este correo. Tu cuenta seguirá segura.</p>
-                <p style="margin-bottom: 0;">Por razones de seguridad, este enlace expirará en 24 horas.</p>
-              </div>
-            </div>
-            
-            <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 14px; color: #666;">
-              <p style="margin: 0;">&copy; 2025 Assists. Todos los derechos reservados.</p>
-            </div>
-          </div>
+          <p>Hola, ${usuario.nombre},</p>
+          <p>Hemos recibido una solicitud para cambiar tu contraseña. Haz clic en el siguiente enlace para continuar:</p>
+          <a href="https://assists-api.onrender.com/cambiarContrasena.html?token=${token}">Cambiar Contraseña</a>
+          <p>Si no solicitaste este cambio, ignora este correo.</p>
         `,
       };
   

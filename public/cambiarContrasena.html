@@ -225,96 +225,54 @@
       
       <form id="changePasswordForm">
         <div class="form-group">
-          <label for="email" class="form-label">Correo Electrónico</label>
-          <input type="email" id="email" name="email" class="form-control" placeholder="tu.email@example.com" required>
-        </div>
-        
-        <div class="form-group">
           <label for="nuevaContrasena" class="form-label">Nueva Contraseña</label>
           <div class="password-input-wrapper">
             <input type="password" id="nuevaContrasena" name="nuevaContrasena" class="form-control" placeholder="Ingresa tu nueva contraseña" required>
             <button type="button" class="password-toggle" id="togglePassword">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
-                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
-              </svg>
+              <!-- Icono de visibilidad -->
             </button>
           </div>
         </div>
-        
         <button type="submit" class="btn btn-primary">Cambiar Contraseña</button>
       </form>
       
-      <div class="message" id="message" style="display: none;"></div>
+      <script>
+        const form = document.getElementById('changePasswordForm');
+        const messageDiv = document.getElementById('message');
       
-      <div class="text-center mt-3">
-        <a href="#" class="link">Volver a inicio de sesión</a>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Toggle password visibility
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('nuevaContrasena');
-    
-    togglePassword.addEventListener('click', function() {
-      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      passwordInput.setAttribute('type', type);
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
       
-      // Change the icon based on the type
-      if (type === 'text') {
-        this.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>
-          <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/>
-          <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>
-        </svg>`;
-      } else {
-        this.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
-          <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
-        </svg>`;
-      }
-    });
-    
-    // Form submission
-    const form = document.getElementById('changePasswordForm');
-    const messageDiv = document.getElementById('message');
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-
-      const email = document.getElementById('email').value;
-      const nuevaContrasena = document.getElementById('nuevaContrasena').value;
-
-      try {
-        messageDiv.style.display = 'block';
-        messageDiv.textContent = 'Procesando solicitud...';
-        messageDiv.className = 'message';
-        
-        const response = await fetch('https://assists-api.onrender.com/api/usuarios/cambiarContrasena', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, nuevaContrasena }),
+          const urlParams = new URLSearchParams(window.location.search);
+          const token = urlParams.get('token');
+          const nuevaContrasena = document.getElementById('nuevaContrasena').value;
+      
+          if (!token) {
+            alert('Token no encontrado. Por favor, revisa el enlace.');
+            return;
+          }
+      
+          try {
+            const response = await fetch('https://assists-api.onrender.com/api/usuarios/cambiarContrasena', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ token, nuevaContrasena }),
+            });
+      
+            const data = await response.json();
+      
+            if (response.ok) {
+              alert(data.message || 'Contraseña actualizada exitosamente.');
+              form.reset();
+            } else {
+              alert(data.message || 'Error al cambiar la contraseña.');
+            }
+          } catch (error) {
+            alert('Error de conexión. Inténtalo de nuevo más tarde.');
+          }
         });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          messageDiv.textContent = data.message || 'Contraseña actualizada exitosamente.';
-          messageDiv.className = 'message success';
-          form.reset();
-        } else {
-          messageDiv.textContent = data.message || 'Error al cambiar la contraseña.';
-          messageDiv.className = 'message error';
-        }
-      } catch (error) {
-        messageDiv.textContent = 'Error de conexión. Inténtalo de nuevo más tarde.';
-        messageDiv.className = 'message error';
-      }
-    });
-  </script>
+      </script>
 </body>
 </html>
