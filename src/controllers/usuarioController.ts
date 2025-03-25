@@ -9,6 +9,8 @@ import ClaseDias from "../models/claseDias";
 import Inscripcion from "../models/inscripcion";
 import transporter from "../utils/emailTransporter";
 
+const cuentasBloqueadas: { [email: string]: number } = {};
+
 const usuarioController = {
   createUsuario: async (req: Request, res: Response) => {
     try {
@@ -34,16 +36,38 @@ const usuarioController = {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
   
-      if (usuario.intentos === 0) {
-        return res.status(403).json({ message: "Cuenta bloqueada. Contacte al administrador." });
+      // Verificar si la cuenta está bloqueada
+      if (cuentasBloqueadas[email]) {
+        const tiempoActual = Date.now();
+        const tiempoBloqueo = cuentasBloqueadas[email];
+  
+        if (tiempoActual < tiempoBloqueo) {
+          const tiempoRestante = Math.ceil((tiempoBloqueo - tiempoActual) / 1000);
+          return res.status(403).json({ message: `Cuenta bloqueada. Intenta nuevamente en ${tiempoRestante} segundos.` });
+        }
+  
+        // Desbloquear la cuenta después de que pase el tiempo de bloqueo
+        delete cuentasBloqueadas[email];
+        await Usuarios.update({ intentos: 3 }, { where: { id_usuario: usuario.id_usuario } });
       }
   
       const isPasswordValid = await bcrypt.compare(contrasena, usuario.contrasena);
       if (!isPasswordValid) {
-        await Usuarios.update({ intentos: usuario.intentos - 1 }, { where: { id_usuario: usuario.id_usuario } });
-        return res.status(401).json({ message: "Contraseña incorrecta. Intentos restantes: " + (usuario.intentos - 1) });
+        const intentosRestantes = usuario.intentos - 1;
+  
+        if (intentosRestantes === 0) {
+          // Bloquear la cuenta por 30 segundos
+          cuentasBloqueadas[email] = Date.now() + 30 * 1000; // 30 segundos
+          await Usuarios.update({ intentos: 0 }, { where: { id_usuario: usuario.id_usuario } });
+          return res.status(403).json({ message: "Cuenta bloqueada por múltiples intentos fallidos. Intenta nuevamente en 30 segundos." });
+        }
+  
+        // Reducir los intentos restantes
+        await Usuarios.update({ intentos: intentosRestantes }, { where: { id_usuario: usuario.id_usuario } });
+        return res.status(401).json({ message: `Contraseña incorrecta. Intentos restantes: ${intentosRestantes}` });
       }
   
+      // Restablecer intentos en caso de inicio de sesión exitoso
       await Usuarios.update({ intentos: 3 }, { where: { id_usuario: usuario.id_usuario } });
   
       const token = jwt.sign({ id: usuario.id_usuario, id_tipo: usuario.id_tipo }, "your_jwt_secret", { expiresIn: "1h" });
