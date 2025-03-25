@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import Clase from "../models/clase";
 import ClaseDias from "../models/claseDias";
 import jwt from "jsonwebtoken";
+import Inscripcion from "../models/inscripcion";
+import Usuarios from "../models/usuario"; // Import the Usuarios model
 
 const claseController = {
   createClase: async (req: Request, res: Response) => {
@@ -134,6 +136,7 @@ const claseController = {
       if (!req.user) {
         return res.status(401).json({ message: "Usuario no autenticado" });
       }
+  
       const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
       const { id } = req.params;
   
@@ -142,7 +145,32 @@ const claseController = {
         return res.status(403).json({ message: "Acceso denegado. No puedes ver las clases de otro usuario." });
       }
   
-      const clases = await Clase.findAll({ where: { id_profesor: id } });
+      // Obtener el usuario autenticado
+      const usuario = await Usuarios.findOne({ where: { id_usuario: id } });
+  
+      if (!usuario) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+  
+      let clases;
+  
+      if (usuario.id_tipo === "1") {
+        // Si el usuario es un profesor (id_tipo = 1), obtener las clases que le pertenecen
+        clases = await Clase.findAll({ where: { id_profesor: id } });
+      } else if (usuario.id_tipo === "2") {
+        // Si el usuario es un alumno (id_tipo = 2), obtener las clases en las que está inscrito
+        clases = await Clase.findAll({
+          include: [
+            {
+              model: Inscripcion, // Modelo de inscripción
+              where: { id_alumno: id }, // Relación con el alumno
+            },
+          ],
+        });
+      } else {
+        return res.status(400).json({ message: "Tipo de usuario no válido" });
+      }
+  
       res.status(200).json(clases);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
