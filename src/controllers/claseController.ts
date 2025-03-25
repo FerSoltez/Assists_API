@@ -154,11 +154,14 @@ const claseController = {
   
       let clases;
   
-      if (usuario.id_tipo === "1") {
-        // Si el usuario es un profesor (id_tipo = 1), obtener las clases que le pertenecen
+      // Convertir id_tipo a cadena para comparación
+      const idTipo = String(usuario.id_tipo);
+  
+      if (idTipo === "1") {
+        // Si el usuario es un profesor (id_tipo = "1"), obtener las clases que le pertenecen
         clases = await Clase.findAll({ where: { id_profesor: id } });
-      } else if (usuario.id_tipo === "2") {
-        // Si el usuario es un alumno (id_tipo = 2), obtener las clases en las que está inscrito
+      } else if (idTipo === "2") {
+        // Si el usuario es un alumno (id_tipo = "2"), obtener las clases en las que está inscrito
         clases = await Clase.findAll({
           include: [
             {
