@@ -111,6 +111,34 @@ const inscripcionController = {
       res.status(500).json({ error: (error as Error).message });
     }
   },
+
+  getClasesPorAlumno: async (req: Request, res: Response) => {
+    try {
+      const { id_estudiante } = req.params;
+
+      // Buscar las inscripciones del estudiante y obtener la información de las clases
+      const inscripciones = await Inscripcion.findAll({
+        where: { id_estudiante },
+        include: [
+          {
+            model: Clase,
+            attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
+          },
+        ],
+      });
+
+      if (inscripciones.length === 0) {
+        return res.status(404).json({ message: "El estudiante no está inscrito en ninguna clase." });
+      }
+
+      // Extraer la información de las clases
+      const clases = inscripciones.map((inscripcion) => inscripcion.get("Clase"));
+
+      res.status(200).json(clases);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  },
 };
 
 export default inscripcionController;
