@@ -63,7 +63,7 @@ Inscripcion.belongsTo(Usuario, { foreignKey: "id_estudiante" });
 Usuario.hasMany(Inscripcion, { foreignKey: "id_estudiante" });
 
 // Relación con Clase
-Clase.hasMany(Inscripcion, { foreignKey: "id_clase" });
 Inscripcion.belongsTo(Clase, { foreignKey: "id_clase" });
+Clase.hasMany(Inscripcion, { foreignKey: "id_clase" });
 
 export default Inscripcion;

@@ -2,8 +2,6 @@ import { Request, Response } from "express";
 import Clase from "../models/clase";
 import ClaseDias from "../models/claseDias";
 import jwt from "jsonwebtoken";
-import Inscripcion from "../models/inscripcion";
-import Usuario from "../models/usuario"; // Import the Usuario model
 
 const claseController = {
   createClase: async (req: Request, res: Response) => {
@@ -136,7 +134,6 @@ const claseController = {
       if (!req.user) {
         return res.status(401).json({ message: "Usuario no autenticado" });
       }
-  
       const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
       const { id } = req.params;
   
@@ -145,36 +142,7 @@ const claseController = {
         return res.status(403).json({ message: "Acceso denegado. No puedes ver las clases de otro usuario." });
       }
   
-      // Obtener el usuario autenticado
-      const usuario = await Usuario.findOne({ where: { id_usuario: id } });
-  
-      if (!usuario) {
-        return res.status(404).json({ message: "Usuario no encontrado" });
-      }
-  
-      let clases;
-  
-      // Convertir id_tipo a cadena para comparación
-      const idTipo = String(usuario.id_tipo);
-  
-      if (idTipo === "1") {
-        // Si el usuario es un profesor (id_tipo = "1"), obtener las clases que le pertenecen
-        clases = await Clase.findAll({ where: { id_profesor: id } });
-      } else if (idTipo === "2") {
-        // Si el usuario es un alumno (id_tipo = "2"), obtener las clases en las que está inscrito
-        clases = await Clase.findAll({
-          include: [
-            {
-              model: Inscripcion,
-              required: true, // Asegura que solo se devuelvan clases con inscripciones
-              where: { id_estudiante: id }, // Cambiado de id_alumno a id_estudiante
-            },
-          ],
-        });
-      } else {
-        return res.status(400).json({ message: "Tipo de usuario no válido" });
-      }
-  
+      const clases = await Clase.findAll({ where: { id_profesor: id } });
       res.status(200).json(clases);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });

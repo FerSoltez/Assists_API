@@ -14,8 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const clase_1 = __importDefault(require("../models/clase"));
 const claseDias_1 = __importDefault(require("../models/claseDias"));
-const inscripcion_1 = __importDefault(require("../models/inscripcion"));
-const usuario_1 = __importDefault(require("../models/usuario")); // Import the Usuarios model
 const claseController = {
     createClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -144,30 +142,7 @@ const claseController = {
             if (parseInt(id) !== userId) {
                 return res.status(403).json({ message: "Acceso denegado. No puedes ver las clases de otro usuario." });
             }
-            // Obtener el usuario autenticado
-            const usuario = yield usuario_1.default.findOne({ where: { id_usuario: id } });
-            if (!usuario) {
-                return res.status(404).json({ message: "Usuario no encontrado" });
-            }
-            let clases;
-            if (usuario.id_tipo === "1") {
-                // Si el usuario es un profesor (id_tipo = 1), obtener las clases que le pertenecen
-                clases = yield clase_1.default.findAll({ where: { id_profesor: id } });
-            }
-            else if (usuario.id_tipo === "2") {
-                // Si el usuario es un alumno (id_tipo = 2), obtener las clases en las que está inscrito
-                clases = yield clase_1.default.findAll({
-                    include: [
-                        {
-                            model: inscripcion_1.default, // Modelo de inscripción
-                            where: { id_alumno: id }, // Relación con el alumno
-                        },
-                    ],
-                });
-            }
-            else {
-                return res.status(400).json({ message: "Tipo de usuario no válido" });
-            }
+            const clases = yield clase_1.default.findAll({ where: { id_profesor: id } });
             res.status(200).json(clases);
         }
         catch (error) {
