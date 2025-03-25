@@ -262,6 +262,10 @@
       }
 
       try {
+        messageDiv.style.display = 'block';
+        messageDiv.textContent = 'Procesando solicitud...';
+        messageDiv.className = 'message';
+        
         const response = await fetch('https://assists-api.onrender.com/api/usuarios/cambiarContrasena', {
           method: 'POST',
           headers: {
