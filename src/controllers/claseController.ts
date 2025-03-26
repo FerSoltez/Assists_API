@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Clase from "../models/clase";
 import ClaseDias from "../models/claseDias";
 import jwt from "jsonwebtoken";
+import Inscripcion from "../models/inscripcion";
 
 const claseController = {
   createClase: async (req: Request, res: Response) => {
@@ -136,14 +137,27 @@ const claseController = {
       }
       const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
       const { id } = req.params;
-  
+
       // Verificar si el usuario autenticado está intentando acceder a sus propias clases
       if (parseInt(id) !== userId) {
         return res.status(403).json({ message: "Acceso denegado. No puedes ver las clases de otro usuario." });
       }
-  
+
+      // Obtener las clases del profesor
       const clases = await Clase.findAll({ where: { id_profesor: id } });
-      res.status(200).json(clases);
+
+      // Agregar la cantidad de alumnos inscritos a cada clase
+      const clasesConCantidadAlumnos = await Promise.all(
+        clases.map(async (clase) => {
+          const cantidadAlumnos = await Inscripcion.count({ where: { id_clase: clase.id_clase } });
+          return {
+            ...clase.toJSON(),
+            cantidadAlumnos,
+          };
+        })
+      );
+
+      res.status(200).json(clasesConCantidadAlumnos);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }

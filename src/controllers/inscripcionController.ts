@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Inscripcion from "../models/inscripcion";
 import Usuario from "../models/usuario";
 import Clase from "../models/clase";
+import ClaseDias from "../models/claseDias";
 
 const inscripcionController = {
   createInscripcion: async (req: Request, res: Response) => {
@@ -112,9 +113,9 @@ const inscripcionController = {
     }
   },
 
-  getClasesPorAlumno: async (req: Request, res: Response) => {
+getClasesPorAlumno: async (req: Request, res: Response) => {
     try {
-      const { id_estudiante } = req.params;
+      const { id_estudiante } = req.body; // Cambiado a req.body
 
       // Buscar las inscripciones del estudiante y obtener la información de las clases
       const inscripciones = await Inscripcion.findAll({
@@ -123,6 +124,16 @@ const inscripcionController = {
           {
             model: Clase,
             attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
+            include: [
+              {
+                model: ClaseDias,
+                attributes: ["dia_semana"], // Días de la clase
+              },
+              {
+                model: Inscripcion,
+                attributes: [], // No necesitamos los datos de inscripción, solo contar
+              },
+            ],
           },
         ],
       });
@@ -131,8 +142,21 @@ const inscripcionController = {
         return res.status(404).json({ message: "El estudiante no está inscrito en ninguna clase." });
       }
 
-      // Extraer la información de las clases
-      const clases = inscripciones.map((inscripcion) => inscripcion.get("Clase"));
+      // Extraer la información de las clases con la cantidad de alumnos y días
+      const clases = await Promise.all(
+        inscripciones.map(async (inscripcion) => {
+          const clase = inscripcion.get("Clase") as any;
+
+          // Contar la cantidad de alumnos inscritos en la clase
+          const cantidadAlumnos = await Inscripcion.count({ where: { id_clase: clase.id_clase } });
+
+          return {
+            ...clase,
+            cantidadAlumnos,
+            dias: clase.ClaseDias.map((dia: any) => dia.dia_semana), // Extraer los días
+          };
+        })
+      );
 
       res.status(200).json(clases);
     } catch (error) {

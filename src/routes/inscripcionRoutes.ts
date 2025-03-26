@@ -10,6 +10,6 @@ router.get("/inscripciones", authMiddleware, inscripcionController.getAllInscrip
 router.get("/inscripciones/:id", authMiddleware, inscripcionController.getInscripcion);
 router.delete("/inscripciones/:id", authMiddleware, inscripcionController.deleteInscripcion);
 router.get("/inscripciones/clase/:id_clase", authMiddleware, roleMiddleware([1]), inscripcionController.getAlumnosPorClase as any);
-router.get("/clases/alumno/:id_estudiante", authMiddleware, roleMiddleware([2]),inscripcionController.getClasesPorAlumno as any);
+router.post("/clases/alumno", authMiddleware, roleMiddleware([2]), inscripcionController.getClasesPorAlumno as any);
 
 export default router;

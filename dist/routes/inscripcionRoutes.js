@@ -13,4 +13,5 @@ router.get("/inscripciones", authMiddleware_1.default, inscripcionController_1.d
 router.get("/inscripciones/:id", authMiddleware_1.default, inscripcionController_1.default.getInscripcion);
 router.delete("/inscripciones/:id", authMiddleware_1.default, inscripcionController_1.default.deleteInscripcion);
 router.get("/inscripciones/clase/:id_clase", authMiddleware_1.default, (0, roleMiddleware_1.roleMiddleware)([1]), inscripcionController_1.default.getAlumnosPorClase);
+router.post("/clases/alumno", authMiddleware_1.default, (0, roleMiddleware_1.roleMiddleware)([2]), inscripcionController_1.default.getClasesPorAlumno);
 exports.default = router;

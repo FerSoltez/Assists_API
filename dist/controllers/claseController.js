@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const clase_1 = __importDefault(require("../models/clase"));
 const claseDias_1 = __importDefault(require("../models/claseDias"));
+const inscripcion_1 = __importDefault(require("../models/inscripcion"));
 const claseController = {
     createClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -142,8 +143,14 @@ const claseController = {
             if (parseInt(id) !== userId) {
                 return res.status(403).json({ message: "Acceso denegado. No puedes ver las clases de otro usuario." });
             }
+            // Obtener las clases del profesor
             const clases = yield clase_1.default.findAll({ where: { id_profesor: id } });
-            res.status(200).json(clases);
+            // Agregar la cantidad de alumnos inscritos a cada clase
+            const clasesConCantidadAlumnos = yield Promise.all(clases.map((clase) => __awaiter(void 0, void 0, void 0, function* () {
+                const cantidadAlumnos = yield inscripcion_1.default.count({ where: { id_clase: clase.id_clase } });
+                return Object.assign(Object.assign({}, clase.toJSON()), { cantidadAlumnos });
+            })));
+            res.status(200).json(clasesConCantidadAlumnos);
         }
         catch (error) {
             res.status(500).json({ error: error.message });

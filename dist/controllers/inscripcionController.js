@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const inscripcion_1 = __importDefault(require("../models/inscripcion"));
 const usuario_1 = __importDefault(require("../models/usuario"));
 const clase_1 = __importDefault(require("../models/clase"));
+const claseDias_1 = __importDefault(require("../models/claseDias"));
 const inscripcionController = {
     createInscripcion: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -110,6 +111,45 @@ const inscripcionController = {
                 clase,
                 alumnos,
             });
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }),
+    getClasesPorAlumno: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const { id_estudiante } = req.body; // Cambiado a req.body
+            // Buscar las inscripciones del estudiante y obtener la información de las clases
+            const inscripciones = yield inscripcion_1.default.findAll({
+                where: { id_estudiante },
+                include: [
+                    {
+                        model: clase_1.default,
+                        attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
+                        include: [
+                            {
+                                model: claseDias_1.default,
+                                attributes: ["dia_semana"], // Días de la clase
+                            },
+                            {
+                                model: inscripcion_1.default,
+                                attributes: [], // No necesitamos los datos de inscripción, solo contar
+                            },
+                        ],
+                    },
+                ],
+            });
+            if (inscripciones.length === 0) {
+                return res.status(404).json({ message: "El estudiante no está inscrito en ninguna clase." });
+            }
+            // Extraer la información de las clases con la cantidad de alumnos y días
+            const clases = yield Promise.all(inscripciones.map((inscripcion) => __awaiter(void 0, void 0, void 0, function* () {
+                const clase = inscripcion.get("Clase");
+                // Contar la cantidad de alumnos inscritos en la clase
+                const cantidadAlumnos = yield inscripcion_1.default.count({ where: { id_clase: clase.id_clase } });
+                return Object.assign(Object.assign({}, clase), { cantidadAlumnos, dias: clase.ClaseDias.map((dia) => dia.dia_semana) });
+            })));
+            res.status(200).json(clases);
         }
         catch (error) {
             res.status(500).json({ error: error.message });

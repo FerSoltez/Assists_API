@@ -78,7 +78,7 @@ const usuarioController = {
                     id: usuario.id_usuario,
                     email: usuario.email,
                     nombre: usuario.nombre,
-                    tipo: usuario.id_tipo
+                    id_tipo: usuario.id_tipo
                 }
             });
         }
