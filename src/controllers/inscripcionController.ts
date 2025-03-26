@@ -114,56 +114,59 @@ const inscripcionController = {
     }
   },
 
-  getClasesPorAlumno: async (req: Request, res: Response) => {
+getClasesPorAlumno: async (req: Request, res: Response) => {
     try {
-      const { id_estudiante } = req.body; // Cambiado a req.body
+        const { id_estudiante } = req.body; // Cambiado a req.body
 
-      // Buscar las inscripciones del estudiante y obtener la información de las clases
-      const inscripciones = await Inscripcion.findAll({
-        where: { id_estudiante },
-        include: [
-          {
-            model: Clase,
-            attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
+        // Buscar las inscripciones del estudiante y obtener la información de las clases
+        const inscripciones = await Inscripcion.findAll({
+            where: { id_estudiante },
             include: [
-              {
-                model: ClaseDias, // Relación con los días de la clase
-                attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
-                as: "ClaseDias", // Alias definido en la relación
-              },
+                {
+                    model: Clase,
+                    attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
+                    include: [
+                        {
+                            model: ClaseDias, // Relación con los días de la clase
+                            attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
+                            as: "ClaseDias", // Alias definido en la relación
+                        },
+                    ],
+                },
             ],
-          },
-        ],
-      });
+        });
 
-      if (inscripciones.length === 0) {
-        return res.status(404).json({ message: "El estudiante no está inscrito en ninguna clase." });
-      }
+        if (inscripciones.length === 0) {
+            return res.status(404).json({ message: "El estudiante no está inscrito en ninguna clase." });
+        }
 
-      // Extraer la información de las clases con la cantidad de alumnos y días
-      const clases = await Promise.all(
-        inscripciones.map(async (inscripcion) => {
-          const clase = inscripcion.get("Clase") as any;
+        // Procesar las clases para eliminar redundancia
+        const clases = await Promise.all(
+            inscripciones.map(async (inscripcion) => {
+                const clase = inscripcion.get("Clase") as any;
 
-          // Contar la cantidad de alumnos inscritos en la clase
-          const cantidadAlumnos = await Inscripcion.count({ where: { id_clase: clase.id_clase } });
+                // Contar la cantidad de alumnos inscritos en la clase
+                const cantidadAlumnos = await Inscripcion.count({ where: { id_clase: clase.id_clase } });
 
-          // Convertir el objeto Sequelize a JSON y eliminar ClaseDias
-          const claseJSON = clase.toJSON();
-          const dias = claseJSON.ClaseDias?.map((dia: any) => dia.dia_semana) || []; // Extraer los días de la clase
-          delete claseJSON.ClaseDias; // Eliminar ClaseDias del objeto
+                // Extraer los días de la clase
+                const dias = clase.ClaseDias?.map((dia: any) => dia.dia_semana) || [];
 
-          return {
-            ...claseJSON,
-            cantidadAlumnos,
-            dias,
-          };
-        })
-      );
+                // Construir el objeto final sin incluir ClaseDias
+                return {
+                    id_clase: clase.id_clase,
+                    nombre_clase: clase.nombre_clase,
+                    horario: clase.horario,
+                    duracion: clase.duracion,
+                    codigo_clase: clase.codigo_clase,
+                    cantidadAlumnos,
+                    dias,
+                };
+            })
+        );
 
-      res.status(200).json(clases);
+        res.status(200).json(clases);
     } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
+        res.status(500).json({ error: (error as Error).message });
     }
   },
 };
