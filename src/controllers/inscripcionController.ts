@@ -132,9 +132,9 @@ getInscripcion: async (req: Request, res: Response) => {
                 as: "ClaseDias",
               },
               {
-                model: Usuario, // Agregar la relación con UsuarioModel
-                attributes: ["nombre"], // Solo necesitamos el nombre del profesor
-                as: "Profesor",
+                model: Usuario, // Este alias debe coincidir con el alias del modelo
+                attributes: ["nombre"],
+                as: "Profesor", // Asegúrate de que coincide con la definición en `Clase.ts`
               },
             ],
           },
