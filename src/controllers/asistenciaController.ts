@@ -127,12 +127,13 @@ const asistenciaController = {
         ],
       });
 
-      // Transformar los datos para incluir el nombre de la clase en el nivel superior
+      // Transformar los datos para incluir el nombre de la clase en el nivel superior y eliminar la redundancia
       const resultado = asistencias.map((asistencia) => {
         const asistenciaJSON = asistencia.toJSON();
+        const { Clase, ...resto } = asistenciaJSON; // Extraer Clase y el resto de las propiedades
         return {
-          ...asistenciaJSON,
-          nombre_clase: asistenciaJSON.Clase?.nombre_clase, // Extraer el nombre de la clase
+          ...resto,
+          nombre_clase: Clase?.nombre_clase, // Agregar el nombre de la clase al nivel superior
         };
       });
 
