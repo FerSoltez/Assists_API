@@ -158,18 +158,21 @@ const claseController = {
       const clasesConCantidadAlumnos = await Promise.all(
         clases.map(async (clase) => {
           const cantidadAlumnos = await Inscripcion.count({ where: { id_clase: clase.id_clase } });
+
+          // Convertir el objeto Sequelize a JSON y eliminar ClaseDias
+          const claseJSON = clase.toJSON();
+          const dias = (clase as any).ClaseDias.map((dia: any) => dia.dia_semana); // Extraer los días de la clase
+          delete (claseJSON as any).ClaseDias; // Eliminar ClaseDias del objeto
+
           return {
-            ...clase.toJSON(),
+            ...claseJSON,
             cantidadAlumnos,
-            dias: (clase as any).ClaseDias.map((dia: any) => dia.dia_semana), // Extraer los días de la clase
+            dias,
           };
         })
       );
 
-      // Eliminar la propiedad ClaseDias del resultado
-      const resultado = clasesConCantidadAlumnos;
-
-      res.status(200).json(resultado);
+      res.status(200).json(clasesConCantidadAlumnos);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
