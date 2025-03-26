@@ -160,14 +160,14 @@ getInscripcion: async (req: Request, res: Response) => {
           delete claseJSON.ClaseDias; // Eliminar ClaseDias del objeto
   
           // Extraer el nombre del profesor
-          const profesor = claseJSON.Profesor?.nombre || ""; // Obtener solo el nombre del profesor
+          const nombreProfesor = claseJSON.Profesor?.nombre || ""; // Obtener solo el nombre del profesor
           delete claseJSON.Profesor; // Eliminar la propiedad Profesor del objeto
   
           return {
             ...claseJSON,
             cantidadAlumnos,
             dias,
-            profesor, // Incluir solo el nombre del profesor
+            nombreProfesor, // Renombrar la propiedad a nombreProfesor
           };
         })
       );
@@ -177,6 +177,7 @@ getInscripcion: async (req: Request, res: Response) => {
       res.status(500).json({ error: (error as Error).message });
     }
   }
+  
   
 };
 
