@@ -128,9 +128,9 @@ getInscripcion: async (req: Request, res: Response) => {
             attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
             include: [
               {
-                model: ClaseDias, // Relación con los días de la clase
-                attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
-                as: "ClaseDias", // Alias definido en la relación
+                model: ClaseDias,
+                attributes: ["dia_semana"],
+                as: "ClaseDias",
               },
             ],
           },
