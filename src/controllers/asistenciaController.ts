@@ -122,7 +122,6 @@ const asistenciaController = {
           {
             model: Clase, // Relación con el modelo Clase
             attributes: ["nombre_clase"], // Solo traer el nombre de la clase
-            as: "Clase", // Alias definido en la relación
           },
         ],
       });
@@ -132,7 +131,7 @@ const asistenciaController = {
         const asistenciaJSON = asistencia.toJSON();
         return {
           ...asistenciaJSON,
-          nombre_clase: asistenciaJSON.Clase?.nombre_clase || null, // Agregar el nombre de la clase
+          nombre_clase: (asistencia as any).Clase?.nombre_clase || null, // Usar any para evitar el error
         };
       });
 
