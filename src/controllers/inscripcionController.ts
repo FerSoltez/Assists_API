@@ -117,7 +117,7 @@ getInscripcion: async (req: Request, res: Response) => {
 
   getClasesPorAlumno: async (req: Request, res: Response) => {
     try {
-      const { id_estudiante } = req.body; // Cambiado a req.body
+      const { id_estudiante } = req.body;
   
       // Buscar las inscripciones del estudiante y obtener la información de las clases
       const inscripciones = await Inscripcion.findAll({
@@ -125,17 +125,17 @@ getInscripcion: async (req: Request, res: Response) => {
         include: [
           {
             model: Clase,
-            attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
+            attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"],
             include: [
               {
-                model: ClaseDias, // Relación con los días de la clase
-                attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
-                as: "ClaseDias", // Alias definido en la relación
+                model: ClaseDias,
+                attributes: ["dia_semana"],
+                as: "ClaseDias",
               },
               {
-                model: UsuarioModel, // Relación con el modelo Usuario para obtener el nombre del profesor
-                attributes: ["nombre"], // Traer solo el nombre del profesor
-                as: "Profesor", // Alias para la relación, asegúrate de que esté correctamente definido
+                model: UsuarioModel, // Incluir el profesor
+                attributes: ["nombre"], // Solo obtener el nombre del profesor
+                as: "Profesor",
               },
             ],
           },
@@ -159,14 +159,15 @@ getInscripcion: async (req: Request, res: Response) => {
           const dias = claseJSON.ClaseDias?.map((dia: any) => dia.dia_semana) || []; // Extraer los días de la clase
           delete claseJSON.ClaseDias; // Eliminar ClaseDias del objeto
   
-          // Incluir el nombre del profesor
-          const profesor = claseJSON.Profesor?.nombre || ""; // Obtener el nombre del profesor
+          // Extraer el nombre del profesor
+          const profesor = claseJSON.Profesor?.nombre || ""; // Obtener solo el nombre del profesor
+          delete claseJSON.Profesor; // Eliminar la propiedad Profesor del objeto
   
           return {
             ...claseJSON,
             cantidadAlumnos,
             dias,
-            profesor, // Incluir el nombre del profesor
+            profesor, // Incluir solo el nombre del profesor
           };
         })
       );
@@ -176,6 +177,7 @@ getInscripcion: async (req: Request, res: Response) => {
       res.status(500).json({ error: (error as Error).message });
     }
   }
+  
 };
 
 export default inscripcionController;
