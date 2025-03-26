@@ -76,5 +76,6 @@ AsistenciaModel.init(
 
 // Definir la asociación con ClaseModel
 AsistenciaModel.belongsTo(ClaseModel, { foreignKey: "id_clase", as: "Clase" });
+ClaseModel.belongsTo(UsuarioModel, { foreignKey: "id_profesor", as: "Profesor" });
 
 export default AsistenciaModel;
