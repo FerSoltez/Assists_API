@@ -43,9 +43,9 @@ UsuarioModel.init(
       allowNull: false,
     },
     intentos: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
   {
     sequelize,
