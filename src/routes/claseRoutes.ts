@@ -6,7 +6,7 @@ import { roleMiddleware } from "../middleware/roleMiddleware";
 const router = Router();
 
 router.post("/clases", authMiddleware, roleMiddleware([1]), claseController.createClase); // Solo profesores
-router.post("/clases", authMiddleware, claseController.getAllClases);
+router.post("/clases/get", authMiddleware, claseController.getAllClases);
 router.post("/clases/detalle", authMiddleware, claseController.getClase);
 router.delete("/clases/:id", authMiddleware, roleMiddleware([1]), claseController.deleteClase as any);
 router.patch("/clases/:id", authMiddleware, claseController.partialUpdateClase as any);
