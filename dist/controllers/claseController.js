@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,15 +29,15 @@ const inscripcion_1 = __importDefault(require("../models/inscripcion"));
 const claseController = {
     createClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const { nombre_clase, horario, duracion, id_profesor, dias } = req.body;
+            const { nombre_clase, descripcion, horario, duracion, id_profesor, dias } = req.body;
             // Generar un código aleatorio de 6 dígitos
             const codigo_clase = Math.random().toString(36).substring(2, 8).toUpperCase();
             // Crear la clase
-            const newClase = yield clase_1.default.create({ nombre_clase, horario, duracion, id_profesor, codigo_clase });
+            const newClase = yield clase_1.default.create({ nombre_clase, descripcion, horario, duracion, id_profesor, codigo_clase });
             // Crear los registros en CLASE_DIAS si se proporcionan días
             if (dias && Array.isArray(dias)) {
                 const claseDiasData = dias.map((dia) => ({
-                    id_clase: newClase.id_clase,
+                    id_clase: Number(newClase.id_clase),
                     dia_semana: dia,
                 }));
                 yield claseDias_1.default.bulkCreate(claseDiasData);
@@ -43,7 +54,9 @@ const claseController = {
     }),
     getAllClases: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const clases = yield clase_1.default.findAll();
+            const clases = yield clase_1.default.findAll({
+                include: [{ model: claseDias_1.default }], // Incluir los días asociados
+            });
             res.status(200).json(clases);
         }
         catch (error) {
@@ -53,7 +66,9 @@ const claseController = {
     getClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { id } = req.body; // Cambiado a req.body
-            const clase = yield clase_1.default.findByPk(id);
+            const clase = yield clase_1.default.findByPk(id, {
+                include: [{ model: claseDias_1.default }], // Incluir los días asociados
+            });
             if (clase) {
                 res.status(200).json(clase);
             }
@@ -110,8 +125,24 @@ const claseController = {
             if (clase.id_profesor !== userId) {
                 return res.status(403).json({ message: "Acceso denegado. No puedes actualizar una clase que no te pertenece." });
             }
-            yield clase_1.default.update(req.body, { where: { id_clase: id } });
-            const updatedClase = yield clase_1.default.findByPk(id);
+            // Actualizar los datos de la clase
+            const _a = req.body, { dias } = _a, claseData = __rest(_a, ["dias"]); // Separar los días del resto de los datos
+            yield clase_1.default.update(claseData, { where: { id_clase: id } });
+            // Actualizar los días de la clase si se proporcionan
+            if (dias && Array.isArray(dias)) {
+                // Eliminar los días existentes
+                yield claseDias_1.default.destroy({ where: { id_clase: id } });
+                // Crear los nuevos días
+                const claseDiasData = dias.map((dia) => ({
+                    id_clase: Number(id),
+                    dia_semana: dia,
+                }));
+                yield claseDias_1.default.bulkCreate(claseDiasData);
+            }
+            // Obtener la clase actualizada con los días asociados
+            const updatedClase = yield clase_1.default.findByPk(id, {
+                include: [{ model: claseDias_1.default }],
+            });
             res.status(200).json(updatedClase);
         }
         catch (error) {
@@ -134,18 +165,17 @@ const claseController = {
                 where: { id_profesor: id },
                 include: [
                     {
-                        model: claseDias_1.default, // Relación con los días de la clase
-                        attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
+                        model: claseDias_1.default,
+                        attributes: ["dia_semana"],
                     },
                 ],
             });
             // Agregar la cantidad de alumnos inscritos a cada clase y eliminar ClaseDias
             const clasesConCantidadAlumnos = yield Promise.all(clases.map((clase) => __awaiter(void 0, void 0, void 0, function* () {
                 const cantidadAlumnos = yield inscripcion_1.default.count({ where: { id_clase: clase.id_clase } });
-                // Convertir el objeto Sequelize a JSON y eliminar ClaseDias
                 const claseJSON = clase.toJSON();
-                const dias = clase.ClaseDias.map((dia) => dia.dia_semana); // Extraer los días de la clase
-                delete claseJSON.ClaseDias; // Eliminar ClaseDias del objeto
+                const dias = claseJSON.ClaseDias.map((dia) => dia.dia_semana);
+                delete claseJSON.ClaseDias;
                 return Object.assign(Object.assign({}, claseJSON), { cantidadAlumnos,
                     dias });
             })));

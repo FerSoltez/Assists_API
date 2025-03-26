@@ -25,7 +25,14 @@ const cuentasBloqueadas = {};
 const usuarioController = {
     createUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
+            // Verificar si ya existe un usuario con el mismo correo
+            const existingUsuario = yield usuario_1.default.findOne({ where: { email: req.body.email } });
+            if (existingUsuario) {
+                return res.status(400).json({ message: "Ya existe un usuario con este correo." });
+            }
+            // Hashear la contraseña
             const hashedPassword = yield bcryptjs_1.default.hash(req.body.contrasena, 10);
+            // Crear el nuevo usuario
             const newUsuario = yield usuario_1.default.create(Object.assign(Object.assign({}, req.body), { contrasena: hashedPassword, intentos: 3 }));
             res.status(201).json(newUsuario);
         }

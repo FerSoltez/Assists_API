@@ -19,6 +19,10 @@ ClaseModel.init({
         type: sequelize_1.DataTypes.STRING(100),
         allowNull: false,
     },
+    descripcion: {
+        type: sequelize_1.DataTypes.TEXT, // Nuevo campo
+        allowNull: true, // Es opcional
+    },
     horario: {
         type: sequelize_1.DataTypes.DATE,
         allowNull: false,

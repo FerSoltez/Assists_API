@@ -7,18 +7,18 @@ import Inscripcion from "../models/inscripcion";
 const claseController = {
   createClase: async (req: Request, res: Response) => {
     try {
-      const { nombre_clase, horario, duracion, id_profesor, dias } = req.body;
+      const { nombre_clase, descripcion, horario, duracion, id_profesor, dias } = req.body;
 
       // Generar un código aleatorio de 6 dígitos
       const codigo_clase = Math.random().toString(36).substring(2, 8).toUpperCase();
 
       // Crear la clase
-      const newClase = await Clase.create({ nombre_clase, horario, duracion, id_profesor, codigo_clase });
+      const newClase = await Clase.create({ nombre_clase, descripcion, horario, duracion, id_profesor, codigo_clase });
 
       // Crear los registros en CLASE_DIAS si se proporcionan días
       if (dias && Array.isArray(dias)) {
         const claseDiasData = dias.map((dia: string) => ({
-          id_clase: Number(newClase.id_clase), // Ensure id_clase is a number
+          id_clase: Number(newClase.id_clase),
           dia_semana: dia,
         }));
 
@@ -38,7 +38,9 @@ const claseController = {
 
   getAllClases: async (req: Request, res: Response) => {
     try {
-      const clases = await Clase.findAll();
+      const clases = await Clase.findAll({
+        include: [{ model: ClaseDias }], // Incluir los días asociados
+      });
       res.status(200).json(clases);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
@@ -48,7 +50,9 @@ const claseController = {
   getClase: async (req: Request, res: Response) => {
     try {
       const { id } = req.body; // Cambiado a req.body
-      const clase = await Clase.findByPk(id);
+      const clase = await Clase.findByPk(id, {
+        include: [{ model: ClaseDias }], // Incluir los días asociados
+      });
       if (clase) {
         res.status(200).json(clase);
       } else {
@@ -66,7 +70,7 @@ const claseController = {
       }
       const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
       const { id } = req.params;
-  
+
       // Verificar si la clase pertenece al usuario autenticado
       const clase = await Clase.findByPk(id);
       if (!clase) {
@@ -75,13 +79,13 @@ const claseController = {
       if (clase.id_profesor !== userId) {
         return res.status(403).json({ message: "Acceso denegado. No puedes eliminar una clase que no te pertenece." });
       }
-  
+
       // Eliminar los días asociados en CLASE_DIAS
       await ClaseDias.destroy({ where: { id_clase: id } });
-  
+
       // Eliminar la clase en CLASE
       const deleted = await Clase.destroy({ where: { id_clase: id } });
-  
+
       if (deleted) {
         res.status(200).json({ message: "Clase y sus días asociados eliminados exitosamente" });
       } else {
@@ -91,7 +95,7 @@ const claseController = {
       res.status(500).json({ error: (error as Error).message });
     }
   },
-  
+
   partialUpdateClase: async (req: Request, res: Response) => {
     try {
       if (!req.user) {
@@ -120,7 +124,7 @@ const claseController = {
 
         // Crear los nuevos días
         const claseDiasData = dias.map((dia: string) => ({
-          id_clase: Number(id), // Ensure id_clase is a number
+          id_clase: Number(id),
           dia_semana: dia,
         }));
         await ClaseDias.bulkCreate(claseDiasData);
@@ -136,7 +140,7 @@ const claseController = {
       res.status(500).json({ error: (error as Error).message });
     }
   },
-  
+
   getClasesByUsuarioId: async (req: Request, res: Response) => {
     try {
       if (!req.user) {
@@ -155,8 +159,8 @@ const claseController = {
         where: { id_profesor: id },
         include: [
           {
-            model: ClaseDias, // Relación con los días de la clase
-            attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
+            model: ClaseDias,
+            attributes: ["dia_semana"],
           },
         ],
       });
@@ -166,10 +170,9 @@ const claseController = {
         clases.map(async (clase) => {
           const cantidadAlumnos = await Inscripcion.count({ where: { id_clase: clase.id_clase } });
 
-          // Convertir el objeto Sequelize a JSON y eliminar ClaseDias
           const claseJSON = clase.toJSON();
-          const dias = (clase as any).ClaseDias.map((dia: any) => dia.dia_semana); // Extraer los días de la clase
-          delete (claseJSON as any).ClaseDias; // Eliminar ClaseDias del objeto
+          const dias = (claseJSON as any).ClaseDias.map((dia: any) => dia.dia_semana);
+          delete (claseJSON as any).ClaseDias;
 
           return {
             ...claseJSON,

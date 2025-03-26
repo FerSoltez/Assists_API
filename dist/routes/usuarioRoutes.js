@@ -9,7 +9,7 @@ const authMiddleware_1 = __importDefault(require("../middleware/authMiddleware")
 const router = (0, express_1.Router)();
 router.post("/usuarios", usuarioController_1.default.createUsuario);
 router.post("/usuarios/login", usuarioController_1.default.loginUsuario);
-router.post("/usuarios", usuarioController_1.default.getAllUsuarios);
+router.post("/usuarios/get", usuarioController_1.default.getAllUsuarios);
 router.post("/usuarios/detalle", authMiddleware_1.default, usuarioController_1.default.getUsuario);
 router.patch("/usuarios/:id", usuarioController_1.default.partialUpdateUsuario);
 router.delete("/usuarios/:id", authMiddleware_1.default, usuarioController_1.default.deleteUsuario);

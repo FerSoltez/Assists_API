@@ -5,6 +5,7 @@ import ClaseDias from "./claseDias";
 interface ClaseAttributes {
   id_clase: number;
   nombre_clase: string;
+  descripcion?: string; // Nuevo campo opcional
   horario: Date;
   duracion: number;
   id_profesor: number;
@@ -16,6 +17,7 @@ interface ClaseCreationAttributes extends Optional<ClaseAttributes, "id_clase" |
 class ClaseModel extends Model<ClaseAttributes, ClaseCreationAttributes> implements ClaseAttributes {
   public id_clase!: number;
   public nombre_clase!: string;
+  public descripcion?: string; // Nuevo campo opcional
   public horario!: Date;
   public duracion!: number;
   public id_profesor!: number;
@@ -33,6 +35,10 @@ ClaseModel.init(
     nombre_clase: {
       type: DataTypes.STRING(100),
       allowNull: false,
+    },
+    descripcion: {
+      type: DataTypes.TEXT, // Nuevo campo
+      allowNull: true, // Es opcional
     },
     horario: {
       type: DataTypes.DATE,
