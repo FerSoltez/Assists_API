@@ -18,7 +18,7 @@ const claseController = {
       // Crear los registros en CLASE_DIAS si se proporcionan días
       if (dias && Array.isArray(dias)) {
         const claseDiasData = dias.map((dia: string) => ({
-          id_clase: newClase.id_clase,
+          id_clase: Number(newClase.id_clase), // Ensure id_clase is a number
           dia_semana: dia,
         }));
 
@@ -99,7 +99,7 @@ const claseController = {
       }
       const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
       const { id } = req.params;
-  
+
       // Verificar si la clase pertenece al usuario autenticado
       const clase = await Clase.findByPk(id);
       if (!clase) {
@@ -108,9 +108,29 @@ const claseController = {
       if (clase.id_profesor !== userId) {
         return res.status(403).json({ message: "Acceso denegado. No puedes actualizar una clase que no te pertenece." });
       }
-  
-      await Clase.update(req.body, { where: { id_clase: id } });
-      const updatedClase = await Clase.findByPk(id);
+
+      // Actualizar los datos de la clase
+      const { dias, ...claseData } = req.body; // Separar los días del resto de los datos
+      await Clase.update(claseData, { where: { id_clase: id } });
+
+      // Actualizar los días de la clase si se proporcionan
+      if (dias && Array.isArray(dias)) {
+        // Eliminar los días existentes
+        await ClaseDias.destroy({ where: { id_clase: id } });
+
+        // Crear los nuevos días
+        const claseDiasData = dias.map((dia: string) => ({
+          id_clase: Number(id), // Ensure id_clase is a number
+          dia_semana: dia,
+        }));
+        await ClaseDias.bulkCreate(claseDiasData);
+      }
+
+      // Obtener la clase actualizada con los días asociados
+      const updatedClase = await Clase.findByPk(id, {
+        include: [{ model: ClaseDias }],
+      });
+
       res.status(200).json(updatedClase);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
