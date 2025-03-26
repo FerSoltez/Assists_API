@@ -1,6 +1,5 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from '../config/database';
-import ClaseModel from "./clase";
 
 interface UsuarioAttributes {
   id_usuario: number;
@@ -55,7 +54,5 @@ UsuarioModel.init(
     timestamps: false,
   }
 );
-
-UsuarioModel.hasMany(ClaseModel, { foreignKey: "id_profesor", as: "Clases" });
 
 export default UsuarioModel;
