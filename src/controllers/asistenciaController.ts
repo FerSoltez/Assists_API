@@ -2,13 +2,26 @@ import { Request, Response } from "express";
 import Asistencia from "../models/asistencia";
 import jwt from "jsonwebtoken";
 import ClaseModel from "../models/clase"; // Import the ClaseModel
-import UsuarioModel from "../models/usuario"; // Asegúrate de importar el modelo Usuario
 
 const asistenciaController = {
   createAsistencia: async (req: Request, res: Response) => {
     try {
       const newAsistencia = await Asistencia.create(req.body);
       res.status(201).json(newAsistencia);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  },
+
+  getAsistencia: async (req: Request, res: Response) => {
+    try {
+      const { id } = req.body; // Cambiado a req.body
+      const asistencia = await Asistencia.findByPk(id);
+      if (asistencia) {
+        res.status(200).json(asistencia);
+      } else {
+        res.status(404).json({ message: "Asistencia no encontrada" });
+      }
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
@@ -86,70 +99,41 @@ const asistenciaController = {
       if (!req.user) {
         return res.status(401).json({ message: "Usuario no autenticado" });
       }
-      const userId = (req.user as jwt.JwtPayload).id;
-      const { id } = req.body;
-  
+      const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
+      const { id } = req.body; // Cambiado a req.body
+
+      // Verificar si el usuario autenticado está intentando acceder a sus propias asistencias
       if (parseInt(id) !== userId) {
         return res.status(403).json({ message: "Acceso denegado. No puedes ver las asistencias de otro usuario." });
       }
-  
-      // Obtener asistencias con el nombre de la clase y el nombre del profesor
+
+      // Obtener las asistencias del estudiante con el nombre de la clase
       const asistencias = await Asistencia.findAll({
         where: { id_estudiante: id },
         include: [
           {
-            model: ClaseModel,
-            as: "Clase",
-            attributes: ["nombre_clase"],
-            include: [
-              {
-                model: UsuarioModel, // Relación con UsuarioModel (Profesor)
-                as: "Profesor",
-                attributes: ["nombre"], // Solo el nombre del profesor
-              },
-            ],
+            model: ClaseModel, // Relación con el modelo Clase
+            as: "Clase", // Especificar el alias definido en la relación
+            attributes: ["nombre_clase"], // Solo incluir el nombre de la clase
           },
         ],
       });
-  
-      // Transformar la respuesta para simplificar el formato
-      interface AsistenciaResponse {
-        id_asistencia: number;
-        id_estudiante: number;
-        fecha: string;
-        nombre_clase?: string;
-        nombre_profesor?: string;
-      }
 
-      interface ClaseResponse {
-        nombre_clase?: string;
-        Profesor?: {
-          nombre?: string;
-        };
-      }
-
-      interface AsistenciaJSON {
-        id_asistencia: number;
-        id_estudiante: number;
-        fecha: string;
-        Clase?: ClaseResponse;
-      }
-
-      const resultado: AsistenciaResponse[] = asistencias.map((asistencia) => {
-        const asistenciaJSON = asistencia.toJSON() as unknown as AsistenciaJSON;
-        const { Clase, ...resto } = asistenciaJSON;
+      // Transformar los datos para incluir el nombre de la clase en el nivel superior y eliminar la redundancia
+      const resultado = asistencias.map((asistencia) => {
+        const asistenciaJSON = asistencia.toJSON();
+        const { Clase, ...resto } = asistenciaJSON; // Extraer Clase y el resto de las propiedades
         return {
           ...resto,
-          nombre_clase: Clase?.nombre_clase,
-          nombre_profesor: Clase?.Profesor?.nombre, // Agregar el nombre del profesor
+          nombre_clase: Clase?.nombre_clase, // Agregar el nombre de la clase al nivel superior
         };
       });
-  
+
       res.status(200).json(resultado);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
-  }  
+  },
 };
 
 export default asistenciaController;
