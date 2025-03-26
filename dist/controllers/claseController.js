@@ -52,7 +52,8 @@ const claseController = {
     }),
     getClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const clase = yield clase_1.default.findByPk(req.params.id);
+            const { id } = req.body; // Cambiado a req.body
+            const clase = yield clase_1.default.findByPk(id);
             if (clase) {
                 res.status(200).json(clase);
             }

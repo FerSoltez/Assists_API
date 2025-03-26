@@ -8,11 +8,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const asistencia_1 = __importDefault(require("../models/asistencia"));
+const clase_1 = __importDefault(require("../models/clase")); // Import the ClaseModel
 const asistenciaController = {
     createAsistencia: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -34,7 +46,8 @@ const asistenciaController = {
     }),
     getAsistencia: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const asistencia = yield asistencia_1.default.findByPk(req.params.id);
+            const { id } = req.body; // Cambiado a req.body
+            const asistencia = yield asistencia_1.default.findByPk(id);
             if (asistencia) {
                 res.status(200).json(asistencia);
             }
@@ -117,13 +130,29 @@ const asistenciaController = {
                 return res.status(401).json({ message: "Usuario no autenticado" });
             }
             const userId = req.user.id; // ID del usuario autenticado extraído del token
-            const { id } = req.params;
+            const { id } = req.body; // Cambiado a req.body
             // Verificar si el usuario autenticado está intentando acceder a sus propias asistencias
             if (parseInt(id) !== userId) {
                 return res.status(403).json({ message: "Acceso denegado. No puedes ver las asistencias de otro usuario." });
             }
-            const asistencias = yield asistencia_1.default.findAll({ where: { id_estudiante: id } });
-            res.status(200).json(asistencias);
+            // Obtener las asistencias del estudiante con el nombre de la clase
+            const asistencias = yield asistencia_1.default.findAll({
+                where: { id_estudiante: id },
+                include: [
+                    {
+                        model: clase_1.default, // Relación con el modelo Clase
+                        as: "Clase", // Especificar el alias definido en la relación
+                        attributes: ["nombre_clase"], // Solo incluir el nombre de la clase
+                    },
+                ],
+            });
+            // Transformar los datos para incluir el nombre de la clase en el nivel superior y eliminar la redundancia
+            const resultado = asistencias.map((asistencia) => {
+                const asistenciaJSON = asistencia.toJSON();
+                const { Clase } = asistenciaJSON, resto = __rest(asistenciaJSON, ["Clase"]); // Extraer Clase y el resto de las propiedades
+                return Object.assign(Object.assign({}, resto), { nombre_clase: Clase === null || Clase === void 0 ? void 0 : Clase.nombre_clase });
+            });
+            res.status(200).json(resultado);
         }
         catch (error) {
             res.status(500).json({ error: error.message });

@@ -50,9 +50,10 @@ const inscripcionController = {
     }
   },
 
-  getInscripcion: async (req: Request, res: Response) => {
+getInscripcion: async (req: Request, res: Response) => {
     try {
-      const inscripcion = await Inscripcion.findByPk(req.params.id);
+      const { id } = req.body; // Cambiado a req.body
+      const inscripcion = await Inscripcion.findByPk(id);
       if (inscripcion) {
         res.status(200).json(inscripcion);
       } else {
@@ -78,7 +79,7 @@ const inscripcionController = {
 
   getAlumnosPorClase: async (req: Request, res: Response) => {
     try {
-      const { id_clase } = req.params;
+      const { id_clase } = req.body; // Cambiado a req.body
 
       // Buscar las inscripciones de la clase y obtener los nombres de los estudiantes junto con la información de la clase
       const inscripciones = await Inscripcion.findAll({

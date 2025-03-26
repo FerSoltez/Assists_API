@@ -24,7 +24,8 @@ const asistenciaController = {
 
   getAsistencia: async (req: Request, res: Response) => {
     try {
-      const asistencia = await Asistencia.findByPk(req.params.id);
+      const { id } = req.body; // Cambiado a req.body
+      const asistencia = await Asistencia.findByPk(id);
       if (asistencia) {
         res.status(200).json(asistencia);
       } else {

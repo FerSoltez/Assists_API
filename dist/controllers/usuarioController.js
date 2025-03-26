@@ -101,7 +101,7 @@ const usuarioController = {
                 return res.status(401).json({ message: "Usuario no autenticado" });
             }
             const userId = req.user.id; // ID del usuario autenticado extraído del token
-            const { id } = req.params;
+            const { id } = req.body; // Cambiado a req.body
             // Verificar si el usuario autenticado está intentando acceder a sus propios datos
             if (parseInt(id) !== userId) {
                 return res.status(403).json({ message: "Acceso denegado. No puedes ver los datos de otro usuario." });

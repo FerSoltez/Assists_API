@@ -57,7 +57,8 @@ const inscripcionController = {
     }),
     getInscripcion: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const inscripcion = yield inscripcion_1.default.findByPk(req.params.id);
+            const { id } = req.body; // Cambiado a req.body
+            const inscripcion = yield inscripcion_1.default.findByPk(id);
             if (inscripcion) {
                 res.status(200).json(inscripcion);
             }
@@ -85,7 +86,7 @@ const inscripcionController = {
     }),
     getAlumnosPorClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const { id_clase } = req.params;
+            const { id_clase } = req.body; // Cambiado a req.body
             // Buscar las inscripciones de la clase y obtener los nombres de los estudiantes junto con la información de la clase
             const inscripciones = yield inscripcion_1.default.findAll({
                 where: { id_clase },

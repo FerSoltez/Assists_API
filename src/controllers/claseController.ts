@@ -47,7 +47,8 @@ const claseController = {
 
   getClase: async (req: Request, res: Response) => {
     try {
-      const clase = await Clase.findByPk(req.params.id);
+      const { id } = req.body; // Cambiado a req.body
+      const clase = await Clase.findByPk(id);
       if (clase) {
         res.status(200).json(clase);
       } else {
