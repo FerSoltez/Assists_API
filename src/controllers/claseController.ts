@@ -136,15 +136,23 @@ const claseController = {
         return res.status(401).json({ message: "Usuario no autenticado" });
       }
       const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
-      const { id } = req.params;
+      const { id } = req.body; // Cambiado a req.body
 
       // Verificar si el usuario autenticado está intentando acceder a sus propias clases
       if (parseInt(id) !== userId) {
         return res.status(403).json({ message: "Acceso denegado. No puedes ver las clases de otro usuario." });
       }
 
-      // Obtener las clases del profesor
-      const clases = await Clase.findAll({ where: { id_profesor: id } });
+      // Obtener las clases del profesor con los días de clase
+      const clases = await Clase.findAll({
+        where: { id_profesor: id },
+        include: [
+          {
+            model: ClaseDias, // Relación con los días de la clase
+            attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
+          },
+        ],
+      });
 
       // Agregar la cantidad de alumnos inscritos a cada clase
       const clasesConCantidadAlumnos = await Promise.all(
@@ -153,6 +161,7 @@ const claseController = {
           return {
             ...clase.toJSON(),
             cantidadAlumnos,
+            dias: (clase as any).ClaseDias.map((dia: any) => dia.dia_semana), // Extraer los días de la clase
           };
         })
       );

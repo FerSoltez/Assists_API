@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import Inscripcion from "../models/inscripcion";
 import Usuario from "../models/usuario";
 import Clase from "../models/clase";
-import ClaseDias from "../models/claseDias";
+import ClaseDias from "../models/claseDias"; // Import the ClaseDias model
+import jwt from "jsonwebtoken";
 
 const inscripcionController = {
   createInscripcion: async (req: Request, res: Response) => {
@@ -113,7 +114,7 @@ const inscripcionController = {
     }
   },
 
-getClasesPorAlumno: async (req: Request, res: Response) => {
+  getClasesPorAlumno: async (req: Request, res: Response) => {
     try {
       const { id_estudiante } = req.body; // Cambiado a req.body
 
@@ -126,12 +127,8 @@ getClasesPorAlumno: async (req: Request, res: Response) => {
             attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
             include: [
               {
-                model: ClaseDias,
-                attributes: ["dia_semana"], // Días de la clase
-              },
-              {
-                model: Inscripcion,
-                attributes: [], // No necesitamos los datos de inscripción, solo contar
+                model: ClaseDias, // Relación con los días de la clase
+                attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
               },
             ],
           },
@@ -151,9 +148,9 @@ getClasesPorAlumno: async (req: Request, res: Response) => {
           const cantidadAlumnos = await Inscripcion.count({ where: { id_clase: clase.id_clase } });
 
           return {
-            ...clase,
+            ...clase.toJSON(), // Convertir el objeto Sequelize a JSON
             cantidadAlumnos,
-            dias: clase.ClaseDias.map((dia: any) => dia.dia_semana), // Extraer los días
+            dias: clase.ClaseDias.map((dia: any) => dia.dia_semana), // Extraer los días de la clase
           };
         })
       );
