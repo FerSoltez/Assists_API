@@ -2,6 +2,7 @@ import { DataTypes, Model } from "sequelize";
 import { sequelize } from '../config/database';
 import UsuarioModel from "./usuario";
 import ClaseModel from "./clase";
+import ClaseAttributes from "./clase"; // Asegúrate de importar el modelo correcto
 
 interface AsistenciaAttributes {
   id_asistencia: number;
@@ -9,6 +10,9 @@ interface AsistenciaAttributes {
   id_clase: number;
   estatus: string;
   fecha_hora: Date;
+  Clase?: {
+    nombre_clase: string; // Solo incluye los atributos necesarios de Clase
+  };
 }
 
 class AsistenciaModel extends Model<AsistenciaAttributes> implements AsistenciaAttributes {
@@ -63,5 +67,7 @@ AsistenciaModel.init(
     timestamps: false,
   }
 );
+
+AsistenciaModel.belongsTo(ClaseModel, { foreignKey: 'id_clase', as: 'Clase' });
 
 export default AsistenciaModel;
