@@ -1,4 +1,4 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model, Association } from "sequelize";
 import { sequelize } from '../config/database';
 import UsuarioModel from "./usuario";
 import ClaseModel from "./clase";
@@ -9,6 +9,9 @@ interface AsistenciaAttributes {
   id_clase: number;
   estatus: string;
   fecha_hora: Date;
+
+  // Propiedad opcional para la relación con ClaseModel
+  Clase?: ClaseModel;
 }
 
 class AsistenciaModel extends Model<AsistenciaAttributes> implements AsistenciaAttributes {
@@ -17,6 +20,13 @@ class AsistenciaModel extends Model<AsistenciaAttributes> implements AsistenciaA
   public id_clase!: number;
   public estatus!: string;
   public fecha_hora!: Date;
+
+  // Propiedad para la asociación con ClaseModel
+  public Clase?: ClaseModel;
+
+  public static associations: {
+    Clase: Association<AsistenciaModel, ClaseModel>;
+  };
 }
 
 AsistenciaModel.init(
@@ -63,5 +73,9 @@ AsistenciaModel.init(
     timestamps: false,
   }
 );
+
+// Definir la asociación con ClaseModel
+AsistenciaModel.belongsTo(ClaseModel, { foreignKey: "id_clase", as: "Clase" });
+ClaseModel.hasMany(AsistenciaModel, { foreignKey: "id_clase", as: "Asistencias" });
 
 export default AsistenciaModel;

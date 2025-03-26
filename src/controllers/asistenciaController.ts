@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Asistencia from "../models/asistencia";
 import jwt from "jsonwebtoken";
+import ClaseModel from "../models/clase"; // Import the ClaseModel
 
 const asistenciaController = {
   createAsistencia: async (req: Request, res: Response) => {
@@ -107,15 +108,34 @@ const asistenciaController = {
         return res.status(401).json({ message: "Usuario no autenticado" });
       }
       const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
-      const { id } = req.params;
-  
+      const { id } = req.body; // Cambiado a req.body
+
       // Verificar si el usuario autenticado está intentando acceder a sus propias asistencias
       if (parseInt(id) !== userId) {
         return res.status(403).json({ message: "Acceso denegado. No puedes ver las asistencias de otro usuario." });
       }
-  
-      const asistencias = await Asistencia.findAll({ where: { id_estudiante: id } });
-      res.status(200).json(asistencias);
+
+      // Obtener las asistencias del estudiante con el nombre de la clase
+      const asistencias = await Asistencia.findAll({
+        where: { id_estudiante: id },
+        include: [
+          {
+            model: ClaseModel, // Relación con el modelo Clase
+            attributes: ["nombre_clase"], // Solo incluir el nombre de la clase
+          },
+        ],
+      });
+
+      // Transformar los datos para incluir el nombre de la clase en el nivel superior
+      const resultado = asistencias.map((asistencia) => {
+        const asistenciaJSON = asistencia.toJSON();
+        return {
+          ...asistenciaJSON,
+          nombre_clase: asistenciaJSON.Clase?.nombre_clase, // Extraer el nombre de la clase
+        };
+      });
+
+      res.status(200).json(resultado);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
