@@ -3,6 +3,7 @@ import Inscripcion from "../models/inscripcion";
 import Usuario from "../models/usuario";
 import Clase from "../models/clase";
 import ClaseDias from "../models/claseDias"; // Import the ClaseDias model
+import jwt from "jsonwebtoken"; // Import jsonwebtoken for JwtPayload type
 
 const inscripcionController = {
   createInscripcion: async (req: Request, res: Response) => {
@@ -114,62 +115,51 @@ getInscripcion: async (req: Request, res: Response) => {
     }
   },
 
-  getClasesPorAlumno: async (req: Request, res: Response) => {
+  getClasesByUsuarioId: async (req: Request, res: Response) => {
     try {
-      const { id_estudiante } = req.body; // Cambiado a req.body
+      if (!req.user) {
+        return res.status(401).json({ message: "Usuario no autenticado" });
+      }
+      const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
+      const { id } = req.body; // Cambiado a req.body
 
-      // Buscar las inscripciones del estudiante y obtener la información de las clases
-      const inscripciones = await Inscripcion.findAll({
-        where: { id_estudiante },
+      // Verificar si el usuario autenticado está intentando acceder a sus propias clases
+      if (parseInt(id) !== userId) {
+        return res.status(403).json({ message: "Acceso denegado. No puedes ver las clases de otro usuario." });
+      }
+
+      // Obtener las clases del profesor con los días de clase y el nombre del profesor
+      const clases = await Clase.findAll({
+        where: { id_profesor: id },
         include: [
           {
-            model: Clase,
-            attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
-            include: [
-              {
-                model: ClaseDias,
-                attributes: ["dia_semana"],
-                as: "ClaseDias",
-              },
-              {
-                model: Usuario, // Relación con el modelo Usuario (profesor)
-                attributes: ["nombre"], // Solo traer el nombre del profesor
-                as: "Profesor", // Alias definido en la relación
-              },
-            ],
+            model: ClaseDias,
+            as: "ClaseDias", // Alias definido en la relación
+            attributes: ["dia_semana"], // Solo incluir los días de la clase
+          },
+          {
+            model: Usuario, // Relación con el modelo Usuario (profesor)
+            as: "Profesor", // Alias definido en la relación
+            attributes: ["nombre"], // Solo incluir el nombre del profesor
           },
         ],
       });
 
-      if (inscripciones.length === 0) {
-        return res.status(404).json({ message: "El estudiante no está inscrito en ninguna clase." });
-      }
+      // Transformar los datos para incluir el nombre del profesor y los días en el nivel superior
+      const resultado = clases.map((clase) => {
+        const claseJSON = clase.toJSON();
+        const { ClaseDias, Profesor, ...resto } = claseJSON; // Extraer ClaseDias, Profesor y el resto de las propiedades
+        const dias = ClaseDias?.map((dia: any) => dia.dia_semana) || []; // Extraer los días de la clase
+        const nombreProfesor = Profesor?.nombre || "Sin asignar"; // Extraer el nombre del profesor
 
-      // Extraer la información de las clases con la cantidad de alumnos, días y nombre del profesor
-      const clases = await Promise.all(
-        inscripciones.map(async (inscripcion) => {
-          const clase = inscripcion.get("Clase") as any;
+        return {
+          ...resto,
+          dias, // Agregar los días al nivel superior
+          nombreProfesor, // Agregar el nombre del profesor al nivel superior
+        };
+      });
 
-          // Contar la cantidad de alumnos inscritos en la clase
-          const cantidadAlumnos = await Inscripcion.count({ where: { id_clase: clase.id_clase } });
-
-          // Convertir el objeto Sequelize a JSON y eliminar ClaseDias
-          const claseJSON = clase.toJSON();
-          const dias = claseJSON.ClaseDias?.map((dia: any) => dia.dia_semana) || []; // Extraer los días de la clase
-          const nombreProfesor = claseJSON.Profesor?.nombre || "Sin asignar"; // Extraer el nombre del profesor
-          delete claseJSON.ClaseDias; // Eliminar ClaseDias del objeto
-          delete claseJSON.Profesor; // Eliminar Profesor del objeto
-
-          return {
-            ...claseJSON,
-            cantidadAlumnos,
-            dias,
-            nombreProfesor, // Agregar el nombre del profesor al resultado final
-          };
-        })
-      );
-
-      res.status(200).json(clases);
+      res.status(200).json(resultado);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
