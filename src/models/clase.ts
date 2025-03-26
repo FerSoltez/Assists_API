@@ -2,12 +2,12 @@ import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 import ClaseDias from "./claseDias";
 import UsuarioModel from "./usuario";
-import Inscripcion from "./inscripcion"; // Import the Inscripcion model
+import Inscripcion from "./inscripcion";
 
 interface ClaseAttributes {
   id_clase: number;
   nombre_clase: string;
-  descripcion?: string; // Nuevo campo opcional
+  descripcion?: string;
   horario: Date;
   duracion: number;
   id_profesor: number;
@@ -19,14 +19,13 @@ interface ClaseCreationAttributes extends Optional<ClaseAttributes, "id_clase" |
 class ClaseModel extends Model<ClaseAttributes, ClaseCreationAttributes> implements ClaseAttributes {
   public id_clase!: number;
   public nombre_clase!: string;
-  public descripcion?: string; // Nuevo campo opcional
+  public descripcion?: string;
   public horario!: Date;
   public duracion!: number;
   public id_profesor!: number;
   public codigo_clase!: string;
 }
 
-// Inicializar el modelo
 ClaseModel.init(
   {
     id_clase: {
@@ -39,8 +38,8 @@ ClaseModel.init(
       allowNull: false,
     },
     descripcion: {
-      type: DataTypes.TEXT, // Nuevo campo
-      allowNull: true, // Es opcional
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
     horario: {
       type: DataTypes.DATE,
@@ -68,12 +67,10 @@ ClaseModel.init(
   }
 );
 
-// Configurar la asociación
 ClaseModel.hasMany(ClaseDias, { foreignKey: "id_clase", onDelete: "CASCADE" });
 ClaseDias.belongsTo(ClaseModel, { foreignKey: "id_clase" });
 
-ClaseModel.belongsTo(UsuarioModel, { foreignKey: "id_profesor", as: "Profesor" }); 
+ClaseModel.belongsTo(UsuarioModel, { foreignKey: "id_profesor", as: "Profesor" });
 ClaseModel.hasMany(Inscripcion, { foreignKey: "id_clase", as: "Inscripciones" });
-
 
 export default ClaseModel;

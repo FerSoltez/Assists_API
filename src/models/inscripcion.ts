@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
-import Clase from "./clase";
-import Usuario from "./usuario";
+import ClaseModel from "./clase";
+import UsuarioModel from "./usuario";
 
 interface InscripcionAttributes {
   id_inscripcion: number;
@@ -30,7 +30,7 @@ Inscripcion.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: Clase,
+        model: ClaseModel,
         key: "id_clase",
       },
       onDelete: "CASCADE",
@@ -39,7 +39,7 @@ Inscripcion.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: Usuario,
+        model: UsuarioModel,
         key: "id_usuario",
       },
       onDelete: "CASCADE",
@@ -58,12 +58,10 @@ Inscripcion.init(
   }
 );
 
-// Relación con Usuario
-Inscripcion.belongsTo(Usuario, { foreignKey: "id_estudiante" });
-Usuario.hasMany(Inscripcion, { foreignKey: "id_estudiante" });
+Inscripcion.belongsTo(UsuarioModel, { foreignKey: "id_estudiante" });
+UsuarioModel.hasMany(Inscripcion, { foreignKey: "id_estudiante" });
 
-// Relación con Clase
-Inscripcion.belongsTo(Clase, { foreignKey: "id_clase" });
-Clase.hasMany(Inscripcion, { foreignKey: "id_clase" });
+Inscripcion.belongsTo(ClaseModel, { foreignKey: "id_clase" });
+ClaseModel.hasMany(Inscripcion, { foreignKey: "id_clase" });
 
 export default Inscripcion;
