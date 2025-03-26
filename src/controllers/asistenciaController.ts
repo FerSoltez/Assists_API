@@ -121,6 +121,7 @@ const asistenciaController = {
         include: [
           {
             model: ClaseModel, // Relación con el modelo Clase
+            as: "Clase", // Especificar el alias definido en la relación
             attributes: ["nombre_clase"], // Solo incluir el nombre de la clase
           },
         ],
