@@ -10,6 +10,6 @@ router.post("/inscripciones/get", authMiddleware, inscripcionController.getAllIn
 router.post("/inscripciones/detalle", authMiddleware, inscripcionController.getInscripcion);
 router.delete("/inscripciones/:id", authMiddleware, inscripcionController.deleteInscripcion);
 router.post("/inscripciones/clase", authMiddleware, roleMiddleware([1]), inscripcionController.getAlumnosPorClase as any);
-router.post("/clases/alumno", authMiddleware, roleMiddleware([2]), inscripcionController.getClasesByUsuarioId as any);
+router.post("/clases/alumno", authMiddleware, roleMiddleware([2]), inscripcionController.getClasesPorAlumno as any);
 
 export default router;
