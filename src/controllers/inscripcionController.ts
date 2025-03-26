@@ -132,11 +132,6 @@ getInscripcion: async (req: Request, res: Response) => {
                 attributes: ["dia_semana"],
                 as: "ClaseDias",
               },
-              {
-                model: Usuario, // Relación con el modelo Usuario (maestro)
-                attributes: ["nombre"], // Solo traer el nombre del maestro
-                as: "Profesor", // Alias definido en la relación
-              },
             ],
           },
         ],
@@ -146,7 +141,7 @@ getInscripcion: async (req: Request, res: Response) => {
         return res.status(404).json({ message: "El estudiante no está inscrito en ninguna clase." });
       }
 
-      // Extraer la información de las clases con la cantidad de alumnos, días y nombre del maestro
+      // Extraer la información de las clases con la cantidad de alumnos y días
       const clases = await Promise.all(
         inscripciones.map(async (inscripcion) => {
           const clase = inscripcion.get("Clase") as any;
@@ -157,15 +152,12 @@ getInscripcion: async (req: Request, res: Response) => {
           // Convertir el objeto Sequelize a JSON y eliminar ClaseDias
           const claseJSON = clase.toJSON();
           const dias = claseJSON.ClaseDias?.map((dia: any) => dia.dia_semana) || []; // Extraer los días de la clase
-          const nombreProfesor = claseJSON.Profesor?.nombre || "Sin asignar"; // Extraer el nombre del maestro
           delete claseJSON.ClaseDias; // Eliminar ClaseDias del objeto
-          delete claseJSON.Profesor; // Eliminar Profesor del objeto
 
           return {
             ...claseJSON,
             cantidadAlumnos,
             dias,
-            nombreProfesor, // Agregar el nombre del maestro al resultado final
           };
         })
       );

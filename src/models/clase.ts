@@ -1,7 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 import ClaseDias from "./claseDias";
-import Usuario from "./usuario"; // Import the Usuario model
 
 interface ClaseAttributes {
   id_clase: number;
@@ -70,8 +69,5 @@ ClaseModel.init(
 // Configurar la asociación
 ClaseModel.hasMany(ClaseDias, { foreignKey: "id_clase", onDelete: "CASCADE" });
 ClaseDias.belongsTo(ClaseModel, { foreignKey: "id_clase" });
-
-ClaseModel.belongsTo(Usuario, { foreignKey: "id_profesor", as: "Profesor" });
-Usuario.hasMany(ClaseModel, { foreignKey: "id_profesor", as: "Clases" });
 
 export default ClaseModel;
