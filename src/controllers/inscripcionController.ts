@@ -79,41 +79,46 @@ getInscripcion: async (req: Request, res: Response) => {
 
   getAlumnosPorClase: async (req: Request, res: Response) => {
     try {
-      const { id_clase } = req.body; // Cambiado a req.body
+        const { id_clase } = req.body; // Cambiado a req.body
 
-      // Buscar las inscripciones de la clase y obtener los nombres de los estudiantes junto con la información de la clase
-      const inscripciones = await Inscripcion.findAll({
-        where: { id_clase },
-        include: [
-          {
-            model: Usuario,
-            attributes: ["id_usuario", "nombre"], // Solo traer el ID y el nombre del estudiante
-          },
-          {
-            model: Clase,
-            attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
-          },
-        ],
-      });
+        // Validar que id_clase esté presente
+        if (!id_clase) {
+            return res.status(400).json({ message: "El campo 'id_clase' es obligatorio." });
+        }
 
-      if (inscripciones.length === 0) {
-        return res.status(404).json({ message: "No hay alumnos inscritos en esta clase." });
-      }
+        // Buscar las inscripciones de la clase y obtener los nombres de los estudiantes junto con la información de la clase
+        const inscripciones = await Inscripcion.findAll({
+            where: { id_clase },
+            include: [
+                {
+                    model: Usuario,
+                    attributes: ["id_usuario", "nombre"], // Solo traer el ID y el nombre del estudiante
+                },
+                {
+                    model: Clase,
+                    attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
+                },
+            ],
+        });
 
-      // Extraer la información de la clase (es la misma para todas las inscripciones)
-      const clase = inscripciones[0].get("Clase");
+        if (inscripciones.length === 0) {
+            return res.status(404).json({ message: "No hay alumnos inscritos en esta clase." });
+        }
 
-      // Extraer los nombres de los estudiantes
-      const alumnos = inscripciones.map((inscripcion) => inscripcion.get("Usuario"));
+        // Extraer la información de la clase (es la misma para todas las inscripciones)
+        const clase = inscripciones[0].get("Clase");
 
-      res.status(200).json({
-        clase,
-        alumnos,
-      });
+        // Extraer los nombres de los estudiantes
+        const alumnos = inscripciones.map((inscripcion) => inscripcion.get("Usuario"));
+
+        res.status(200).json({
+            clase,
+            alumnos,
+        });
     } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
+        res.status(500).json({ error: (error as Error).message });
     }
-  },
+},
 
   getClasesPorAlumno: async (req: Request, res: Response) => {
     try {
