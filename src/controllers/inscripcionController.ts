@@ -129,6 +129,7 @@ const inscripcionController = {
               {
                 model: ClaseDias, // Relación con los días de la clase
                 attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
+                as: "ClaseDias", // Alias definido en la relación
               },
             ],
           },
@@ -147,10 +148,15 @@ const inscripcionController = {
           // Contar la cantidad de alumnos inscritos en la clase
           const cantidadAlumnos = await Inscripcion.count({ where: { id_clase: clase.id_clase } });
 
+          // Convertir el objeto Sequelize a JSON y eliminar ClaseDias
+          const claseJSON = clase.toJSON();
+          const dias = claseJSON.ClaseDias?.map((dia: any) => dia.dia_semana) || []; // Extraer los días de la clase
+          delete claseJSON.ClaseDias; // Eliminar ClaseDias del objeto
+
           return {
-            ...clase.toJSON(), // Convertir el objeto Sequelize a JSON
+            ...claseJSON,
             cantidadAlumnos,
-            dias: clase.ClaseDias.map((dia: any) => dia.dia_semana), // Extraer los días de la clase
+            dias,
           };
         })
       );

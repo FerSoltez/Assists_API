@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const inscripcion_1 = __importDefault(require("../models/inscripcion"));
 const usuario_1 = __importDefault(require("../models/usuario"));
 const clase_1 = __importDefault(require("../models/clase"));
-const claseDias_1 = __importDefault(require("../models/claseDias"));
+const claseDias_1 = __importDefault(require("../models/claseDias")); // Import the ClaseDias model
 const inscripcionController = {
     createInscripcion: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -128,12 +128,9 @@ const inscripcionController = {
                         attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
                         include: [
                             {
-                                model: claseDias_1.default,
-                                attributes: ["dia_semana"], // Días de la clase
-                            },
-                            {
-                                model: inscripcion_1.default,
-                                attributes: [], // No necesitamos los datos de inscripción, solo contar
+                                model: claseDias_1.default, // Relación con los días de la clase
+                                attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
+                                as: "ClaseDias", // Alias definido en la relación
                             },
                         ],
                     },
@@ -144,10 +141,16 @@ const inscripcionController = {
             }
             // Extraer la información de las clases con la cantidad de alumnos y días
             const clases = yield Promise.all(inscripciones.map((inscripcion) => __awaiter(void 0, void 0, void 0, function* () {
+                var _a;
                 const clase = inscripcion.get("Clase");
                 // Contar la cantidad de alumnos inscritos en la clase
                 const cantidadAlumnos = yield inscripcion_1.default.count({ where: { id_clase: clase.id_clase } });
-                return Object.assign(Object.assign({}, clase), { cantidadAlumnos, dias: clase.ClaseDias.map((dia) => dia.dia_semana) });
+                // Convertir el objeto Sequelize a JSON y eliminar ClaseDias
+                const claseJSON = clase.toJSON();
+                const dias = ((_a = claseJSON.ClaseDias) === null || _a === void 0 ? void 0 : _a.map((dia) => dia.dia_semana)) || []; // Extraer los días de la clase
+                delete claseJSON.ClaseDias; // Eliminar ClaseDias del objeto
+                return Object.assign(Object.assign({}, claseJSON), { cantidadAlumnos,
+                    dias });
             })));
             res.status(200).json(clases);
         }

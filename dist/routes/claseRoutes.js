@@ -14,5 +14,5 @@ router.get("/clases/:id", authMiddleware_1.default, claseController_1.default.ge
 router.patch("/clases/:id", authMiddleware_1.default, claseController_1.default.updateClase);
 router.delete("/clases/:id", authMiddleware_1.default, (0, roleMiddleware_1.roleMiddleware)([1]), claseController_1.default.deleteClase);
 router.patch("/clases/:id", authMiddleware_1.default, claseController_1.default.partialUpdateClase);
-router.get("/clases/usuario/:id", authMiddleware_1.default, (0, roleMiddleware_1.roleMiddleware)([1]), claseController_1.default.getClasesByUsuarioId);
+router.post("/clases/usuario", authMiddleware_1.default, (0, roleMiddleware_1.roleMiddleware)([1]), claseController_1.default.getClasesByUsuarioId);
 exports.default = router;

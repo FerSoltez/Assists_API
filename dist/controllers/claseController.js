@@ -138,17 +138,30 @@ const claseController = {
                 return res.status(401).json({ message: "Usuario no autenticado" });
             }
             const userId = req.user.id; // ID del usuario autenticado extraído del token
-            const { id } = req.params;
+            const { id } = req.body; // Cambiado a req.body
             // Verificar si el usuario autenticado está intentando acceder a sus propias clases
             if (parseInt(id) !== userId) {
                 return res.status(403).json({ message: "Acceso denegado. No puedes ver las clases de otro usuario." });
             }
-            // Obtener las clases del profesor
-            const clases = yield clase_1.default.findAll({ where: { id_profesor: id } });
-            // Agregar la cantidad de alumnos inscritos a cada clase
+            // Obtener las clases del profesor con los días de clase
+            const clases = yield clase_1.default.findAll({
+                where: { id_profesor: id },
+                include: [
+                    {
+                        model: claseDias_1.default, // Relación con los días de la clase
+                        attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
+                    },
+                ],
+            });
+            // Agregar la cantidad de alumnos inscritos a cada clase y eliminar ClaseDias
             const clasesConCantidadAlumnos = yield Promise.all(clases.map((clase) => __awaiter(void 0, void 0, void 0, function* () {
                 const cantidadAlumnos = yield inscripcion_1.default.count({ where: { id_clase: clase.id_clase } });
-                return Object.assign(Object.assign({}, clase.toJSON()), { cantidadAlumnos });
+                // Convertir el objeto Sequelize a JSON y eliminar ClaseDias
+                const claseJSON = clase.toJSON();
+                const dias = clase.ClaseDias.map((dia) => dia.dia_semana); // Extraer los días de la clase
+                delete claseJSON.ClaseDias; // Eliminar ClaseDias del objeto
+                return Object.assign(Object.assign({}, claseJSON), { cantidadAlumnos,
+                    dias });
             })));
             res.status(200).json(clasesConCantidadAlumnos);
         }
