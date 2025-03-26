@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Asistencia from "../models/asistencia";
 import jwt from "jsonwebtoken";
 import ClaseModel from "../models/clase"; // Import the ClaseModel
+import UsuarioModel from "../models/usuario"; // Import the UsuarioModel
 
 const asistenciaController = {
   createAsistencia: async (req: Request, res: Response) => {
@@ -87,13 +88,13 @@ const asistenciaController = {
       }
       const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
       const { id } = req.body; // Cambiado a req.body
-
+  
       // Verificar si el usuario autenticado está intentando acceder a sus propias asistencias
       if (parseInt(id) !== userId) {
         return res.status(403).json({ message: "Acceso denegado. No puedes ver las asistencias de otro usuario." });
       }
-
-      // Obtener las asistencias del estudiante con el nombre de la clase
+  
+      // Obtener las asistencias del estudiante con el nombre de la clase y el nombre del profesor
       const asistencias = await Asistencia.findAll({
         where: { id_estudiante: id },
         include: [
@@ -101,20 +102,28 @@ const asistenciaController = {
             model: ClaseModel, // Relación con el modelo Clase
             as: "Clase", // Especificar el alias definido en la relación
             attributes: ["nombre_clase"], // Solo incluir el nombre de la clase
+            include: [
+              {
+                model: UsuarioModel, // Relación con el modelo Usuario (profesor)
+                as: "Profesor", // Alias para la relación con el profesor
+                attributes: ["nombre"], // Solo incluir el nombre del profesor
+              },
+            ],
           },
         ],
       });
-
-      // Transformar los datos para incluir el nombre de la clase en el nivel superior y eliminar la redundancia
+  
+      // Transformar los datos para incluir el nombre de la clase y el profesor en el nivel superior
       const resultado = asistencias.map((asistencia) => {
         const asistenciaJSON = asistencia.toJSON();
         const { Clase, ...resto } = asistenciaJSON; // Extraer Clase y el resto de las propiedades
         return {
           ...resto,
           nombre_clase: Clase?.nombre_clase, // Agregar el nombre de la clase al nivel superior
+          nombre_profesor: Clase?.Profesor?.nombre, // Agregar el nombre del profesor al nivel superior
         };
       });
-
+  
       res.status(200).json(resultado);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });

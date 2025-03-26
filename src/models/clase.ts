@@ -1,6 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 import ClaseDias from "./claseDias";
+import UsuarioModel from "./usuario"; // Asegúrate de importar el modelo UsuarioModel
 
 interface ClaseAttributes {
   id_clase: number;
@@ -10,6 +11,7 @@ interface ClaseAttributes {
   duracion: number;
   id_profesor: number;
   codigo_clase: string;
+  
 }
 
 interface ClaseCreationAttributes extends Optional<ClaseAttributes, "id_clase" | "codigo_clase"> {}
@@ -22,6 +24,9 @@ class ClaseModel extends Model<ClaseAttributes, ClaseCreationAttributes> impleme
   public duracion!: number;
   public id_profesor!: number;
   public codigo_clase!: string;
+
+  // Propiedad opcional para la relación con UsuarioModel
+  public Profesor?: UsuarioModel;
 }
 
 // Inicializar el modelo
@@ -69,5 +74,6 @@ ClaseModel.init(
 // Configurar la asociación
 ClaseModel.hasMany(ClaseDias, { foreignKey: "id_clase", onDelete: "CASCADE" });
 ClaseDias.belongsTo(ClaseModel, { foreignKey: "id_clase" });
+ClaseModel.belongsTo(UsuarioModel, { foreignKey: "id_profesor", as: "Profesor" });
 
 export default ClaseModel;
