@@ -141,20 +141,6 @@ const usuarioController = {
     }
   },
 
-  updateUsuario: async (req: Request, res: Response) => {
-    try {
-      const [updated] = await Usuarios.update(req.body, { where: { id_usuario: req.params.id } });
-      if (updated) {
-        const updatedUsuario = await Usuarios.findByPk(req.params.id);
-        res.status(200).json(updatedUsuario);
-      } else {
-        res.status(404).json({ message: "Usuario no encontrado" });
-      }
-    } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
-    }
-  },
-
   deleteUsuario: async (req: Request, res: Response) => {
     try {
       if (!req.user) {

@@ -65,21 +65,6 @@ const claseController = {
             res.status(500).json({ error: error.message });
         }
     }),
-    updateClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const [updated] = yield clase_1.default.update(req.body, { where: { id_clase: req.params.id } });
-            if (updated) {
-                const updatedClase = yield clase_1.default.findByPk(req.params.id);
-                res.status(200).json(updatedClase);
-            }
-            else {
-                res.status(404).json({ message: "Clase no encontrada" });
-            }
-        }
-        catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    }),
     deleteClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             if (!req.user) {

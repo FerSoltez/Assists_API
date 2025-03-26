@@ -59,20 +59,6 @@ const claseController = {
     }
   },
 
-  updateClase: async (req: Request, res: Response) => {
-    try {
-      const [updated] = await Clase.update(req.body, { where: { id_clase: req.params.id } });
-      if (updated) {
-        const updatedClase = await Clase.findByPk(req.params.id);
-        res.status(200).json(updatedClase);
-      } else {
-        res.status(404).json({ message: "Clase no encontrada" });
-      }
-    } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
-    }
-  },
-
   deleteClase: async (req: Request, res: Response) => {
     try {
       if (!req.user) {

@@ -35,30 +35,6 @@ const asistenciaController = {
             res.status(500).json({ error: error.message });
         }
     }),
-    getAllAsistencias: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const asistencias = yield asistencia_1.default.findAll();
-            res.status(200).json(asistencias);
-        }
-        catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    }),
-    getAsistencia: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const { id } = req.body; // Cambiado a req.body
-            const asistencia = yield asistencia_1.default.findByPk(id);
-            if (asistencia) {
-                res.status(200).json(asistencia);
-            }
-            else {
-                res.status(404).json({ message: "Asistencia no encontrada" });
-            }
-        }
-        catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    }),
     updateAsistencia: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const [updated] = yield asistencia_1.default.update(req.body, { where: { id_asistencia: req.params.id } });

@@ -132,21 +132,6 @@ const usuarioController = {
             res.status(500).json({ error: error.message });
         }
     }),
-    updateUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const [updated] = yield usuario_1.default.update(req.body, { where: { id_usuario: req.params.id } });
-            if (updated) {
-                const updatedUsuario = yield usuario_1.default.findByPk(req.params.id);
-                res.status(200).json(updatedUsuario);
-            }
-            else {
-                res.status(404).json({ message: "Usuario no encontrado" });
-            }
-        }
-        catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    }),
     deleteUsuario: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             if (!req.user) {

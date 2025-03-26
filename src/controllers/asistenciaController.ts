@@ -13,29 +13,6 @@ const asistenciaController = {
     }
   },
 
-  getAllAsistencias: async (req: Request, res: Response) => {
-    try {
-      const asistencias = await Asistencia.findAll();
-      res.status(200).json(asistencias);
-    } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
-    }
-  },
-
-  getAsistencia: async (req: Request, res: Response) => {
-    try {
-      const { id } = req.body; // Cambiado a req.body
-      const asistencia = await Asistencia.findByPk(id);
-      if (asistencia) {
-        res.status(200).json(asistencia);
-      } else {
-        res.status(404).json({ message: "Asistencia no encontrada" });
-      }
-    } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
-    }
-  },
-
   updateAsistencia: async (req: Request, res: Response) => {
     try {
       const [updated] = await Asistencia.update(req.body, { where: { id_asistencia: req.params.id } });
