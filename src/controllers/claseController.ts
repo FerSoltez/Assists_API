@@ -154,7 +154,7 @@ const claseController = {
         ],
       });
 
-      // Agregar la cantidad de alumnos inscritos a cada clase
+      // Agregar la cantidad de alumnos inscritos a cada clase y eliminar ClaseDias
       const clasesConCantidadAlumnos = await Promise.all(
         clases.map(async (clase) => {
           const cantidadAlumnos = await Inscripcion.count({ where: { id_clase: clase.id_clase } });
@@ -166,7 +166,10 @@ const claseController = {
         })
       );
 
-      res.status(200).json(clasesConCantidadAlumnos);
+      // Eliminar la propiedad ClaseDias del resultado
+      const resultado = clasesConCantidadAlumnos;
+
+      res.status(200).json(resultado);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
