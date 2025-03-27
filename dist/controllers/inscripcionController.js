@@ -119,19 +119,24 @@ const inscripcionController = {
     }),
     getClasesPorAlumno: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const { id_estudiante } = req.body; // Cambiado a req.body
+            const { id_estudiante } = req.body;
             // Buscar las inscripciones del estudiante y obtener la información de las clases
             const inscripciones = yield inscripcion_1.default.findAll({
                 where: { id_estudiante },
                 include: [
                     {
                         model: clase_1.default,
-                        attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"], // Información de la clase
+                        attributes: ["id_clase", "nombre_clase", "horario", "duracion", "codigo_clase"],
                         include: [
                             {
-                                model: claseDias_1.default, // Relación con los días de la clase
-                                attributes: ["dia_semana"], // Asegúrate de que este atributo exista en tu modelo
-                                as: "ClaseDias", // Alias definido en la relación
+                                model: claseDias_1.default,
+                                attributes: ["dia_semana"],
+                                as: "ClaseDias",
+                            },
+                            {
+                                model: usuario_1.default, // Incluir el profesor
+                                attributes: ["nombre"], // Solo obtener el nombre del profesor
+                                as: "Profesor",
                             },
                         ],
                     },
@@ -142,7 +147,7 @@ const inscripcionController = {
             }
             // Extraer la información de las clases con la cantidad de alumnos y días
             const clases = yield Promise.all(inscripciones.map((inscripcion) => __awaiter(void 0, void 0, void 0, function* () {
-                var _a;
+                var _a, _b;
                 const clase = inscripcion.get("Clase");
                 // Contar la cantidad de alumnos inscritos en la clase
                 const cantidadAlumnos = yield inscripcion_1.default.count({ where: { id_clase: clase.id_clase } });
@@ -150,14 +155,18 @@ const inscripcionController = {
                 const claseJSON = clase.toJSON();
                 const dias = ((_a = claseJSON.ClaseDias) === null || _a === void 0 ? void 0 : _a.map((dia) => dia.dia_semana)) || []; // Extraer los días de la clase
                 delete claseJSON.ClaseDias; // Eliminar ClaseDias del objeto
+                // Extraer el nombre del profesor
+                const nombreProfesor = ((_b = claseJSON.Profesor) === null || _b === void 0 ? void 0 : _b.nombre) || ""; // Obtener solo el nombre del profesor
+                delete claseJSON.Profesor; // Eliminar la propiedad Profesor del objeto
                 return Object.assign(Object.assign({}, claseJSON), { cantidadAlumnos,
-                    dias });
+                    dias,
+                    nombreProfesor });
             })));
             res.status(200).json(clases);
         }
         catch (error) {
             res.status(500).json({ error: error.message });
         }
-    }),
+    })
 };
 exports.default = inscripcionController;

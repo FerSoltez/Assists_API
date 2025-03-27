@@ -35,6 +35,21 @@ const asistenciaController = {
             res.status(500).json({ error: error.message });
         }
     }),
+    getAsistencia: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const { id } = req.body; // Cambiado a req.body
+            const asistencia = yield asistencia_1.default.findByPk(id);
+            if (asistencia) {
+                res.status(200).json(asistencia);
+            }
+            else {
+                res.status(404).json({ message: "Asistencia no encontrada" });
+            }
+        }
+        catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }),
     updateAsistencia: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const [updated] = yield asistencia_1.default.update(req.body, { where: { id_asistencia: req.params.id } });
@@ -56,16 +71,18 @@ const asistenciaController = {
                 return res.status(401).json({ message: "Usuario no autenticado" });
             }
             const userId = req.user.id; // ID del usuario autenticado extraído del token
-            const { id } = req.params;
-            // Verificar si la asistencia pertenece al usuario autenticado
-            const asistencia = yield asistencia_1.default.findByPk(id);
+            const { id } = req.params; // ID de la clase
+            // Verificar si existe una asistencia para el usuario autenticado y la clase especificada
+            const asistencia = yield asistencia_1.default.findOne({
+                where: { id_estudiante: userId, id_clase: id },
+            });
             if (!asistencia) {
                 return res.status(404).json({ message: "Asistencia no encontrada" });
             }
-            if (asistencia.id_estudiante !== userId) {
-                return res.status(403).json({ message: "Acceso denegado. No puedes eliminar una asistencia que no te pertenece." });
-            }
-            const deleted = yield asistencia_1.default.destroy({ where: { id_asistencia: id } });
+            // Eliminar la asistencia
+            const deleted = yield asistencia_1.default.destroy({
+                where: { id_estudiante: userId, id_clase: id },
+            });
             if (deleted) {
                 res.status(200).json({ message: "Asistencia eliminada exitosamente" });
             }

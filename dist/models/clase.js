@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_1 = require("sequelize");
 const database_1 = require("../config/database");
 const claseDias_1 = __importDefault(require("./claseDias"));
+const usuario_1 = __importDefault(require("./usuario")); // Importar el modelo Usuario
 class ClaseModel extends sequelize_1.Model {
 }
 // Inicializar el modelo
@@ -20,8 +21,8 @@ ClaseModel.init({
         allowNull: false,
     },
     descripcion: {
-        type: sequelize_1.DataTypes.TEXT, // Nuevo campo
-        allowNull: true, // Es opcional
+        type: sequelize_1.DataTypes.TEXT,
+        allowNull: true,
     },
     horario: {
         type: sequelize_1.DataTypes.DATE,
@@ -49,4 +50,6 @@ ClaseModel.init({
 // Configurar la asociación
 ClaseModel.hasMany(claseDias_1.default, { foreignKey: "id_clase", onDelete: "CASCADE" });
 claseDias_1.default.belongsTo(ClaseModel, { foreignKey: "id_clase" });
+// Relación con el modelo Usuario (Profesor)
+ClaseModel.belongsTo(usuario_1.default, { foreignKey: 'id_profesor', as: 'Profesor' });
 exports.default = ClaseModel;

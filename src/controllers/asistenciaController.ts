@@ -47,18 +47,20 @@ const asistenciaController = {
         return res.status(401).json({ message: "Usuario no autenticado" });
       }
       const userId = (req.user as jwt.JwtPayload).id; // ID del usuario autenticado extraído del token
-      const { id } = req.params;
+      const { id } = req.params; // ID de la clase
   
-      // Verificar si la asistencia pertenece al usuario autenticado
-      const asistencia = await Asistencia.findByPk(id);
+      // Verificar si existe una asistencia para el usuario autenticado y la clase especificada
+      const asistencia = await Asistencia.findOne({
+        where: { id_estudiante: userId, id_clase: id },
+      });
       if (!asistencia) {
         return res.status(404).json({ message: "Asistencia no encontrada" });
       }
-      if (asistencia.id_estudiante !== userId) {
-        return res.status(403).json({ message: "Acceso denegado. No puedes eliminar una asistencia que no te pertenece." });
-      }
   
-      const deleted = await Asistencia.destroy({ where: { id_asistencia: id } });
+      // Eliminar la asistencia
+      const deleted = await Asistencia.destroy({
+        where: { id_estudiante: userId, id_clase: id },
+      });
       if (deleted) {
         res.status(200).json({ message: "Asistencia eliminada exitosamente" });
       } else {
