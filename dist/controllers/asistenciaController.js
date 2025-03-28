@@ -28,6 +28,28 @@ const clase_1 = __importDefault(require("../models/clase")); // Import the Clase
 const asistenciaController = {
     createAsistencia: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
+            const { id_estudiante, id_clase, fecha_hora } = req.body;
+            // Convertir la fecha a solo día para comparar
+            const fechaInicioDelDia = new Date(fecha_hora);
+            fechaInicioDelDia.setHours(0, 0, 0, 0);
+            const fechaFinDelDia = new Date(fecha_hora);
+            fechaFinDelDia.setHours(23, 59, 59, 999);
+            // Verificar si ya existe una asistencia para el estudiante, clase y día
+            const asistenciaExistente = yield asistencia_1.default.findOne({
+                where: {
+                    id_estudiante,
+                    id_clase,
+                    fecha_hora: {
+                        $between: [fechaInicioDelDia, fechaFinDelDia],
+                    },
+                },
+            });
+            if (asistenciaExistente) {
+                return res.status(400).json({
+                    error: "Ya existe una asistencia registrada para este estudiante en esta clase y día.",
+                });
+            }
+            // Crear la nueva asistencia
             const newAsistencia = yield asistencia_1.default.create(req.body);
             res.status(201).json(newAsistencia);
         }

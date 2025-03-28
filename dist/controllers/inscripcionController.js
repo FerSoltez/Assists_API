@@ -72,7 +72,22 @@ const inscripcionController = {
     }),
     deleteInscripcion: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const deleted = yield inscripcion_1.default.destroy({ where: { id_inscripcion: req.params.id } });
+            if (!req.user) {
+                return res.status(401).json({ message: "Usuario no autenticado" });
+            }
+            const userId = req.user.id; // ID del usuario autenticado extraído del token
+            const { id } = req.params; // ID de la clase
+            // Verificar si existe una inscripción para el usuario autenticado y la clase especificada
+            const inscripcion = yield inscripcion_1.default.findOne({
+                where: { id_estudiante: userId, id_clase: id },
+            });
+            if (!inscripcion) {
+                return res.status(404).json({ message: "Inscripción no encontrada" });
+            }
+            // Eliminar la inscripción
+            const deleted = yield inscripcion_1.default.destroy({
+                where: { id_estudiante: userId, id_clase: id },
+            });
             if (deleted) {
                 res.status(200).json({ message: "Inscripción eliminada exitosamente" });
             }
@@ -86,14 +101,14 @@ const inscripcionController = {
     }),
     getAlumnosPorClase: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const { id_clase } = req.body; // Cambiado a req.body
-            // Buscar las inscripciones de la clase y obtener los nombres de los estudiantes junto con la información de la clase
+            const { id_clase } = req.body; // Se recibe el id_clase en el body
+            // Buscar las inscripciones de la clase y obtener los nombres y correos de los estudiantes junto con la información de la clase
             const inscripciones = yield inscripcion_1.default.findAll({
                 where: { id_clase },
                 include: [
                     {
                         model: usuario_1.default,
-                        attributes: ["id_usuario", "nombre"], // Solo traer el ID y el nombre del estudiante
+                        attributes: ["id_usuario", "nombre", "email"], // Ahora también se incluye el correo
                     },
                     {
                         model: clase_1.default,
@@ -106,8 +121,15 @@ const inscripcionController = {
             }
             // Extraer la información de la clase (es la misma para todas las inscripciones)
             const clase = inscripciones[0].get("Clase");
-            // Extraer los nombres de los estudiantes
-            const alumnos = inscripciones.map((inscripcion) => inscripcion.get("Usuario"));
+            // Extraer los nombres y correos de los estudiantes
+            const alumnos = inscripciones.map((inscripcion) => {
+                const usuario = inscripcion.get("Usuario");
+                return {
+                    id_usuario: usuario.id_usuario,
+                    nombre: usuario.nombre,
+                    email: usuario.email, // Se añade el correo
+                };
+            });
             res.status(200).json({
                 clase,
                 alumnos,
