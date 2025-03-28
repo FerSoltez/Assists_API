@@ -25,32 +25,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const asistencia_1 = __importDefault(require("../models/asistencia"));
 const clase_1 = __importDefault(require("../models/clase")); // Import the ClaseModel
+const sequelize_1 = require("sequelize"); // Importar operadores de Sequelize
 const asistenciaController = {
     createAsistencia: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const { id_estudiante, id_clase, fecha_hora } = req.body;
-            // Convertir la fecha a solo día para comparar
-            const fechaInicioDelDia = new Date(fecha_hora);
-            fechaInicioDelDia.setHours(0, 0, 0, 0);
-            const fechaFinDelDia = new Date(fecha_hora);
-            fechaFinDelDia.setHours(23, 59, 59, 999);
-            // Verificar si ya existe una asistencia para el estudiante, clase y día
+            const { id_estudiante, id_clase, fecha_hora, estatus } = req.body;
+            // Convertir la fecha enviada en un objeto Date
+            const fechaRecibida = new Date(fecha_hora);
+            fechaRecibida.setHours(0, 0, 0, 0); // Ajustar a las 00:00:00 para comparar solo la fecha
+            // Verificar si ya existe una asistencia para el estudiante en la clase en la misma fecha
             const asistenciaExistente = yield asistencia_1.default.findOne({
                 where: {
                     id_estudiante,
                     id_clase,
                     fecha_hora: {
-                        $between: [fechaInicioDelDia, fechaFinDelDia],
+                        [sequelize_1.Op.gte]: fechaRecibida, // Desde las 00:00 del día
+                        [sequelize_1.Op.lt]: new Date(fechaRecibida.getTime() + 24 * 60 * 60 * 1000), // Hasta antes de las 00:00 del siguiente día
                     },
                 },
             });
             if (asistenciaExistente) {
-                return res.status(400).json({
-                    error: "Ya existe una asistencia registrada para este estudiante en esta clase y día.",
-                });
+                return res.status(400).json({ error: "El estudiante ya tiene una asistencia registrada para hoy en esta clase." });
             }
-            // Crear la nueva asistencia
-            const newAsistencia = yield asistencia_1.default.create(req.body);
+            // Crear la nueva asistencia si no existe una previa
+            const newAsistencia = yield asistencia_1.default.create({
+                id_estudiante,
+                id_clase,
+                estatus,
+                fecha_hora: new Date(fecha_hora),
+            }); // <-- Asegura que coincide con la interfaz
             res.status(201).json(newAsistencia);
         }
         catch (error) {

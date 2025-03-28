@@ -1,4 +1,4 @@
-import { DataTypes, Model, Association } from "sequelize";
+import { DataTypes, Model, Association, Optional } from "sequelize";
 import { sequelize } from '../config/database';
 import UsuarioModel from "./usuario";
 import ClaseModel from "./clase";
@@ -13,6 +13,7 @@ interface AsistenciaAttributes {
   // Propiedad opcional para la relación con ClaseModel
   Clase?: ClaseModel;
 }
+interface AsistenciaCreationAttributes extends Optional<AsistenciaAttributes, "id_asistencia"> {}
 
 class AsistenciaModel extends Model<AsistenciaAttributes> implements AsistenciaAttributes {
   public id_asistencia!: number;
